@@ -15,30 +15,36 @@ using std::string;
 bool Lox::hadError = false;
 
 void Lox::runPrompt(){
-
     while(true){
         string line;
         cout << "> ";
 
+        // Take Input
         if(!getline(cin, line)) break;
+        // Run Command
         Lox::run(line);
 
+        // New line = New start
         hadError=false;
     }
 }
 
 void Lox::runFile(const string& path){
+    // File input stream
     std::ifstream file(path);
 
+    // Handle file read failure
     if(!file.is_open()){
         cerr << "Could not open file: " << path << endl;
         exit(74); // custom exit error code (file read failure)
     }
 
+    // Read entire file into buffer
     std::stringstream buffer;
-    buffer << file.rdbuf(); // read entire file into buffer
+    buffer << file.rdbuf(); 
     Lox::run(buffer.str());
 
+    // Exit If Error Occurs Anywhere 
     if(hadError) exit(65);
 }
 

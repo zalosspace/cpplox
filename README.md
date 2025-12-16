@@ -9,7 +9,7 @@ A lexemes is the raw piece of text your code contains, For Example:-
 - ";"
    
 ### Tokens
-A token is the label or category you language gives to that lexeme.
+A token is the label or category your language gives to that lexeme.
 - "int" → KEYWORD
 - "x" → IDENTIFIER
 - "=" → ASSIGN_OP
@@ -26,7 +26,7 @@ a series of word (token).
 A parser takes the flat sequence of tokens and build a tree structure 
 often refered to as - parse tree or abstract syntax treee (AST).
 Actually Parser's the friend/foe which reports syntax errors. 
-![AST Image](./assets/ast.png")
+![AST Image](./assets/ast.png)
 
 ### Static Analysis 
 If the language is statically typed, this is when we type check.

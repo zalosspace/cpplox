@@ -1,0 +1,9 @@
+// check if user is eligible to drive
+
+int age=69;
+if(age>=18) {
+    print("Yes");
+}
+else {
+    print("Nah! I'd Win");
+}

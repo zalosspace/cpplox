@@ -8,6 +8,8 @@
 #include <string>
 #include <any>
 
+// NOTE: It fails to handle string literals as of now
+
 const std::unordered_map<std::string, TokenType> Scanner::keywords = {
     {"and",    TokenType::AND},
     {"class",  TokenType::CLASS},
@@ -27,10 +29,14 @@ const std::unordered_map<std::string, TokenType> Scanner::keywords = {
     {"while",  TokenType::WHILE}
 };
 
+// Constructor
 Scanner::Scanner(std::string source): source(source){};
 
+// Array of Tokens
 std::vector<Token> Scanner::scanTokens(){
+    // Keep scanning until we hit end of file 
     while(!isAtEnd()){
+        // point the scanner to current lexeme beginning
         start=current;
         scanToken();
     }
@@ -43,6 +49,7 @@ void Scanner::scanToken(){
     char c = advance();
 
     switch (c) {
+        // single character match
         case '(': addToken(TokenType::LEFT_PAREN); break;
         case ')': addToken(TokenType::RIGHT_PAREN); break;
         case '{': addToken(TokenType::LEFT_BRACE); break;
@@ -54,6 +61,7 @@ void Scanner::scanToken(){
         case ';': addToken(TokenType::SEMICOLON); break;
         case '*': addToken(TokenType::STAR); break;
 
+        // multiple character match
         case '!':
                   addToken(match('=') ? TokenType::BANG_EQUAL : TokenType::BANG);
                   break;
@@ -75,6 +83,7 @@ void Scanner::scanToken(){
                   }
                   break;
 
+        // special character 
         case ' ':
         case '\r':
         case '\t':
@@ -84,13 +93,13 @@ void Scanner::scanToken(){
                   line++;
                   break;
 
+        // literals
         default: 
                   if(isDigit(c)) number();
                   else if(isAlpha(c)) identifier();
                   else Lox::error(line, "Unexpected character");
                   break;
     }
-
 }
 
 void Scanner::identifier(){
@@ -151,20 +160,24 @@ void Scanner::String(){
     return;
 }
 
+// Function to check character for multiple character lexeme 
 bool Scanner::match(char expected){
     if(isAtEnd()) return false;
     if(source[current] != expected) return false;
-
 
     current++;
     return true;
 }
 
 char Scanner::peek(){
+    // Return the next character
+    // Return '\0' if at end of source
     return isAtEnd() ? '\0' : source[current];
 }
 
 char Scanner::peekNext(){
+    // Return next to next character
+    // Return '\0' if at end of source
     if(current+1 >= source.size()) return '\0';
     return source[current+1];
 }
@@ -178,10 +191,12 @@ bool Scanner::isAtEnd(){
     return current >= source.size();
 }
 
+// Function to add token with only its type 
 void Scanner::addToken(TokenType type){
     addToken(type, "");
 }
 
+// Overloaded Function to add token with type and literal
 void Scanner::addToken(TokenType type, std::any literal){
     std::string text=source.substr(start, current-start); 
     tokens.push_back(Token(type, text, literal, line));
