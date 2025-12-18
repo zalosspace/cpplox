@@ -4,8 +4,6 @@
 #include <variant>
 #include <string>
 
-using Object = std::variant<std::monostate, double, std::string, bool>;
-
 class Binary;
 class Grouping;
 class Literal;
@@ -58,17 +56,24 @@ public:
 
 class Literal : public Expr {
 public:
-    explicit Literal(Object value)
+    explicit Literal(std::any value)
         : value(value) {}
 
-    Object value;
+    std::any value;
 
     // stringify
     std::string toString() const {
-        if (std::holds_alternative<std::monostate>(value)) return "nil";
-        if (auto v = std::get_if<double>(&value)) return std::to_string(*v);
-        if (auto v = std::get_if<std::string>(&value)) return *v;
-        if (auto v = std::get_if<bool>(&value)) return *v ? "true" : "false";
+        if (!value.has_value()) return "nil";
+
+        if (value.type() == typeid(double))
+            return std::to_string(std::any_cast<double>(value));
+
+        if (value.type() == typeid(std::string))
+            return std::any_cast<std::string>(value);
+
+        if (value.type() == typeid(bool))
+            return std::any_cast<bool>(value) ? "true" : "false";
+
         return "nil";
     }
 

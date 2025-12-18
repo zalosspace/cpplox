@@ -2,6 +2,7 @@
 #define LOX_H
 
 #include <string>
+#include "../Token/Token.h"
 
 class Lox{
 public:
@@ -16,6 +17,8 @@ public:
     static void error(int line, std::string message); 
 
     static void report(int line, std::string where, std::string message); 
+
+    static void error(Token token, std::string message);
 };
 
 #endif

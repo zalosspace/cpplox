@@ -67,3 +67,11 @@ void Lox::report(int line, string where, string message) {
     hadError = true;
 }
 
+static void error(Token token, std::string message){
+    if(token.type == TokenType::END_OF_FILE) {
+        Lox::report(token.line, " at end", message);
+    }
+    else {
+        Lox::report(token.line, " at '" + token.lexeme + "'", message);
+    }
+}
