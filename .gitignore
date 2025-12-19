@@ -1,4 +1,2 @@
-*.o
-*.d
-cpplox
 ./tools/GenerateAST
+build/

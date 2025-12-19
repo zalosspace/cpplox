@@ -1,10 +1,13 @@
-#include "Lox.h"
-#include "../Scanner/Scanner.h"
 #include <iostream>
 #include <vector>
 #include <sstream>
 #include <string>
 #include <fstream>
+
+#include "Lox.h"
+#include "../Scanner/Scanner.h"
+#include "../Parser/Parser.h"
+#include "../AstPrinter/AstPrinter.h"
 
 using std::cout;
 using std::cin;
@@ -49,13 +52,30 @@ void Lox::runFile(const string& path){
 }
 
 void Lox::run(string source){
+    // Initialize the scanner
     Scanner scanner(source);
 
     std::vector<Token> tokens = scanner.scanTokens();
-
+    // Print all the tokens
     for(const Token& token: tokens){
         cout << token << endl;
     }
+    
+    // Initialize the parser
+    Parser parser(tokens);
+    Expr* expression = parser.parse();
+    if (!expression) {
+        std::cerr << "Parser returned nullptr!" << std::endl;
+        return;
+    }
+
+    std::cout << expression << std::endl;
+
+    // Stop if there was a syntax error.
+    if(hadError) return;
+
+    AstPrinter printer;
+    std::cout << printer.print(*expression) << std::endl;
 }
 
 void Lox::error(int line, string message) {

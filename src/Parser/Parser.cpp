@@ -1,4 +1,5 @@
 #include "Parser.h"
+#include "../Lox/Lox.h"
 
 // Constructor
 Parser::Parser(std::vector<Token> tokens): tokens(tokens){};
@@ -83,7 +84,15 @@ Expr* Parser::primary(){
         return new Grouping(expr);
     }
 
-    return Parser::primary();
+    throw error(peek(), "Expect expression.");
+}
+
+Expr* Parser::parse() {
+    try {
+        return expression();
+    } catch (const ParseError&) {
+        return nullptr;
+    }
 }
 
 // ------------ Private Helpers ------------
@@ -102,7 +111,7 @@ bool Parser::match(std::vector<TokenType> types){
 Token Parser::consume(TokenType type, std::string message){
     if(check(type)) return advance();
 
-    Lox::error(peek(), message);
+    throw error(peek(), message);
 }
 
 // Check If The Next Token Matches
@@ -130,4 +139,38 @@ Token Parser::peek() {
 // Returns the previous token
 Token Parser::previous() {
     return tokens[current-1];
+}
+
+// ----------- Nested Class -----------
+Parser::ParseError Parser::error(const Token& token, const std::string& message) {
+    Lox::error(token.line, message);
+    return ParseError(token, message);
+}
+
+// synchronize after panic
+// Checks for a new statement
+void Parser::synchronize() {
+    advance();
+
+    while (!isAtEnd()) {
+        // These Suggests beginning of a new statement
+        if (previous().type == SEMICOLON ) return;
+
+        // If you hit any of these return
+        // cause we have hit a new statement
+        // synchronization completed
+        switch (peek().type) { // cleaner than writing a giant if else 
+            case CLASS:
+            case FUN:
+            case VAR:
+            case FOR:
+            case IF:
+            case WHILE:
+            case PRINT:
+            case RETURN:
+                return;
+        }
+
+        advance();
+    }
 }

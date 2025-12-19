@@ -5,39 +5,55 @@
 
 #include <string>
 #include <vector>
+#include <stdexcept>
 
 #include "../Token/TokenType.h"
 #include "../Token/Token.h"
 #include "../Lox/Expr.h"
-#include "../Lox/Lox.h"
 
 class Parser {
-private:
-    // Array of Tokens
-    std::vector<Token> tokens;
-    int current = 0;
+    private:
+        // Array of Tokens
+        std::vector<Token> tokens;
+        int current = 0;
 
-    // Expression Grammar Function (Low -> High)
-    Expr* expression();
-    Expr* equality();
-    Expr* comparison();
-    Expr* term();
-    Expr* factor();
-    Expr* unary();
-    Expr* primary();
+        // Expression Grammar Function (Low -> High)
+        Expr* expression();
+        Expr* equality();
+        Expr* comparison();
+        Expr* term();
+        Expr* factor();
+        Expr* unary();
+        Expr* primary();
 
-    // Helper Function
-    bool match(std::vector<TokenType> types);
-    bool check(TokenType type);
-    bool isAtEnd();
-    Token consume(TokenType type, std::string message);
-    Token advance();
-    Token peek();
-    Token previous();
+        // Helper Function
+        bool match(std::vector<TokenType> types);
+        bool check(TokenType type);
+        bool isAtEnd();
+        Token consume(TokenType type, std::string message);
+        Token advance();
+        Token peek();
+        Token previous();
 
-public:
-    // Constructor
-    Parser(std::vector<Token> tokens);
+        // Nested Private Class
+        class ParseError: public std::runtime_error {
+            public:
+            ParseError(const Token& token, const std::string& message)
+                : std::runtime_error(message), token(token) {}
+
+            Token token;
+        };
+
+        ParseError error(const Token& token, const std::string& message);
+
+        // Synchronize after panic
+        void synchronize();
+
+    public:
+        // Constructor
+        Parser(std::vector<Token> tokens);
+
+        Expr* parse();
 };
 
 #endif
