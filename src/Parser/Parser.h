@@ -18,13 +18,19 @@ class Parser {
         int current = 0;
 
         // Expression Grammar Function (Low -> High)
-        Expr* expression();
-        Expr* equality();
-        Expr* comparison();
-        Expr* term();
-        Expr* factor();
-        Expr* unary();
-        Expr* primary();
+        std::unique_ptr<Expr> expression();
+        // equality → comparison ( ( "!=" | "==" ) comparison )* ;
+        std::unique_ptr<Expr> equality();
+        // comparison → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
+        std::unique_ptr<Expr> comparison();
+        // term → factor ( ( "-" | "+" ) factor )* ;
+        std::unique_ptr<Expr> term();
+        // factor → unary ( ( "/" | "*" ) unary )* ;
+        std::unique_ptr<Expr> factor();
+        // unary → ( "!" | "-" ) unary | primary ;
+        std::unique_ptr<Expr> unary();
+        // primary → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
+        std::unique_ptr<Expr> primary();
 
         // Helper Function
         bool match(std::vector<TokenType> types);
@@ -53,7 +59,7 @@ class Parser {
         // Constructor
         Parser(std::vector<Token> tokens);
 
-        Expr* parse();
+        std::unique_ptr<Expr> parse();
 };
 
 #endif

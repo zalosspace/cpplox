@@ -66,3 +66,6 @@ production language implementations use recursive descent.
 It is considered a _top-down_ parser because it starts from the top or 
 outermost grammer rule (here expression) and works its way down into the 
 nested subexpressions before reaching the leaves of the syntax tree.
+
+## Truthiness and falsiness
+In Lox false & nil are *flasey* and everything else is *truthy*.

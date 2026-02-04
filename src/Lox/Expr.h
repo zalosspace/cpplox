@@ -2,7 +2,9 @@
 
 #include "../Token/Token.h"
 #include <variant>
+#include <memory>
 #include <string>
+#include <any>
 
 class Binary;
 class Grouping;
@@ -13,44 +15,46 @@ class Expr {
 public:
     // Visitor pattern 
     struct Visitor {
-        virtual std::string visitBinaryExpr(const Binary* expr) = 0;
-        virtual std::string visitGroupingExpr(const Grouping* expr) = 0;
-        virtual std::string visitLiteralExpr(const Literal* expr) = 0;
-        virtual std::string visitUnaryExpr(const Unary* expr) = 0;
+        virtual std::any visitBinaryExpr(const Binary& expr) = 0;
+        virtual std::any visitGroupingExpr(const Grouping& expr) = 0;
+        virtual std::any visitLiteralExpr(const Literal& expr) = 0;
+        virtual std::any visitUnaryExpr(const Unary& expr) = 0;
 
         virtual ~Visitor() = default;
     };
 
     virtual ~Expr() = default;
 
-    virtual std::string accept(Visitor& visitor) const = 0;
+    virtual std::any accept(Visitor& visitor) const = 0;
 };
 
 // ------------------ AST Nodes ------------------
 
 class Binary : public Expr {
 public:
-    Binary(Expr* left, Token operator_, Expr* right)
-        : left(left), operator_(operator_), right(right) {}
+    Binary(std::unique_ptr<Expr> left, Token operator_, std::unique_ptr<Expr> right)
+        : left(std::move(left)), operator_(operator_), right(std::move(right)) {}
 
-    Expr* left;
+    std::unique_ptr<Expr> left;
     Token operator_;
-    Expr* right;
+    std::unique_ptr<Expr> right;
 
-    std::string accept(Visitor& visitor) const override {
-        return visitor.visitBinaryExpr(this);
+    // Override
+    std::any accept(Visitor& visitor) const override {
+        return visitor.visitBinaryExpr(*this);
     }
 };
 
 class Grouping : public Expr {
 public:
-    explicit Grouping(Expr* expression)
-        : expression(expression) {}
+    explicit Grouping(std::unique_ptr<Expr> expression)
+        : expression(std::move(expression)) {}
 
-    Expr* expression;
+    std::unique_ptr<Expr> expression;
 
-    std::string accept(Visitor& visitor) const override {
-        return visitor.visitGroupingExpr(this);
+    // Override
+    std::any accept(Visitor& visitor) const override {
+        return visitor.visitGroupingExpr(*this);
     }
 };
 
@@ -77,21 +81,23 @@ public:
         return "nil";
     }
 
-    std::string accept(Visitor& visitor) const override {
-        return visitor.visitLiteralExpr(this);
+    // Override
+    std::any accept(Visitor& visitor) const override {
+        return visitor.visitLiteralExpr(*this);
     }
 };
 
 class Unary : public Expr {
 public:
-    Unary(Token operator_, Expr* right)
-        : operator_(operator_), right(right) {}
+    Unary(Token operator_, std::unique_ptr<Expr> right)
+        : operator_(operator_), right(std::move(right)) {}
 
     Token operator_;
-    Expr* right;
+    std::unique_ptr<Expr> right;
 
-    std::string accept(Visitor& visitor) const override {
-        return visitor.visitUnaryExpr(this);
+    // Override
+    std::any accept(Visitor& visitor) const override {
+        return visitor.visitUnaryExpr(*this);
     }
 };
 

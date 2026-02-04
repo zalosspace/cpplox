@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 #include <vector>
 #include <sstream>
 #include <string>
@@ -9,21 +10,17 @@
 #include "../Parser/Parser.h"
 #include "../AstPrinter/AstPrinter.h"
 
-using std::cout;
-using std::cin;
-using std::cerr;
-using std::endl;
-using std::string;
-
 bool Lox::hadError = false;
+bool Lox::hadRuntimeError = false;
+Interpreter Lox::interpreter;
 
 void Lox::runPrompt(){
     while(true){
-        string line;
-        cout << "> ";
+        std::string line;
+        std::cout << "> ";
 
         // Take Input
-        if(!getline(cin, line)) break;
+        if(!getline(std::cin, line)) break;
         // Run Command
         Lox::run(line);
 
@@ -32,13 +29,13 @@ void Lox::runPrompt(){
     }
 }
 
-void Lox::runFile(const string& path){
+void Lox::runFile(const std::string& path){
     // File input stream
     std::ifstream file(path);
 
     // Handle file read failure
     if(!file.is_open()){
-        cerr << "Could not open file: " << path << endl;
+        std::cerr << "Could not open file: " << path << std::endl;
         exit(74); // custom exit error code (file read failure)
     }
 
@@ -49,45 +46,41 @@ void Lox::runFile(const string& path){
 
     // Exit If Error Occurs Anywhere 
     if(hadError) exit(65);
+    if(hadRuntimeError) exit(70);
 }
 
-void Lox::run(string source){
+void Lox::run(const std::string& source){
     // Initialize the scanner
     Scanner scanner(source);
 
     std::vector<Token> tokens = scanner.scanTokens();
     // Print all the tokens
     for(const Token& token: tokens){
-        cout << token << endl;
+        std::cout << token << std::endl;
     }
     
     // Initialize the parser
     Parser parser(tokens);
-    Expr* expression = parser.parse();
+    std::unique_ptr<Expr> expression = parser.parse();
     if (!expression) {
         std::cerr << "Parser returned nullptr!" << std::endl;
         return;
     }
 
-    std::cout << expression << std::endl;
-
     // Stop if there was a syntax error.
     if(hadError) return;
+
+    interpreter.interpret(*expression);
 
     AstPrinter printer;
     std::cout << printer.print(*expression) << std::endl;
 }
 
-void Lox::error(int line, string message) {
+void Lox::error(int line, std::string message) {
     report(line, "", message);
 }
 
-void Lox::report(int line, string where, string message) {
-    cout << "[line " << line << "] Error" + where + ": " + message;
-    hadError = true;
-}
-
-static void error(Token token, std::string message){
+void Lox::error(Token token, std::string message){
     if(token.type == TokenType::END_OF_FILE) {
         Lox::report(token.line, " at end", message);
     }
@@ -95,3 +88,15 @@ static void error(Token token, std::string message){
         Lox::report(token.line, " at '" + token.lexeme + "'", message);
     }
 }
+
+void Lox::report(int line, std::string where, std::string message) {
+    std::cerr << "[line " << line << "] Error" << where << ": " << message;
+    hadError = true;
+}
+
+void Lox::runtimeError(const RuntimeError& error) {
+    std::cerr << error.what()
+              << "\n[line " << error.token.line << "]\n";
+    hadRuntimeError = true;
+}
+

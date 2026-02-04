@@ -1,93 +1,94 @@
 #include "Parser.h"
 #include "../Lox/Lox.h"
+#include <memory>
 
 // Constructor
 Parser::Parser(std::vector<Token> tokens): tokens(tokens){};
 
 // ------------ Rules ------------
-Expr* Parser::expression(){
+std::unique_ptr<Expr> Parser::expression(){
     return equality();
 }
 
-Expr* Parser::equality(){
+std::unique_ptr<Expr> Parser::equality(){
     // equality → comparison ( ( "!=" | "==" ) comparison )* ;
-    Expr* expr = comparison();
+    std::unique_ptr<Expr> expr = comparison();
 
     while (match({BANG_EQUAL, EQUAL_EQUAL})) {
         Token operator_ = previous();
-        Expr* right = comparison();
-        expr = new Binary(expr, operator_, right);
+        std::unique_ptr<Expr> right = comparison();
+        expr = std::make_unique<Binary>(std::move(expr), operator_, std::move(right));
     }
     return expr;
 }
 
-Expr* Parser::comparison(){
+std::unique_ptr<Expr> Parser::comparison(){
     // comparison → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
-    Expr* expr = term();
+    std::unique_ptr<Expr> expr = term();
 
     while (match({GREATER, GREATER_EQUAL, LESS, LESS_EQUAL})) {
         Token operator_ = previous();
-        Expr* right = term();
-        expr = new Binary(expr, operator_, right);
+        std::unique_ptr<Expr> right = term();
+        expr = std::make_unique<Binary>(std::move(expr), operator_, std::move(right));
     }
     return expr;
 }
 
-Expr* Parser::term(){
+std::unique_ptr<Expr> Parser::term(){
     // term → factor ( ( "-" | "+" ) factor )* ;
-    Expr* expr = factor();
+    std::unique_ptr<Expr> expr = factor();
 
     while (match({MINUS, PLUS})) {
         Token operator_ = previous();
-        Expr* right = factor();
-        expr = new Binary(expr, operator_, right);
+        std::unique_ptr<Expr> right = factor();
+        expr = std::make_unique<Binary>(std::move(expr), operator_, std::move(right));
     }
     return expr;
 }
 
-Expr* Parser::factor(){
+std::unique_ptr<Expr> Parser::factor(){
     // factor → unary ( ( "/" | "*" ) unary )* ;
-    Expr* expr = unary();
+    std::unique_ptr<Expr> expr = unary();
 
     while (match({SLASH, STAR})) {
         Token operator_ = previous();
-        Expr* right = unary();
-        expr = new Binary(expr, operator_, right);
+        std::unique_ptr<Expr> right = unary();
+        expr = std::make_unique<Binary>(std::move(expr), operator_, std::move(right));
     }
     return expr;
 }
 
-Expr* Parser::unary(){
+std::unique_ptr<Expr> Parser::unary(){
     // unary → ( "!" | "-" ) unary | primary ;
     while (match({BANG, MINUS})) {
         Token operator_ = previous();
-        Expr* right = unary();
-        return new Unary(operator_, right);
+        std::unique_ptr<Expr> right = unary();
+        return std::make_unique<Unary>(operator_, std::move(right));
     }
 
     return primary();
 }
 
-Expr* Parser::primary(){
+std::unique_ptr<Expr> Parser::primary(){
     // primary → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
-    if (match({FALSE})) return new Literal(false);
-    if (match({TRUE})) return new Literal(true);
-    if (match({NIL})) return new Literal(nullptr);
+    if (match({FALSE})) return std::make_unique<Literal>(false);
+    if (match({TRUE})) return std::make_unique<Literal>(true);
+    if (match({NIL})) return std::make_unique<Literal>(nullptr);
 
     if (match({NUMBER, STRING})) {
-        return new Literal(previous().literal);
+        return std::make_unique<Literal>(previous().literal);
     }
 
     if(match({LEFT_PAREN})) {
-        Expr* expr = expression();
+        std::unique_ptr<Expr> expr = expression();
         consume(RIGHT_PAREN, "Expect ')' after expression.");
-        return new Grouping(expr);
+        return std::make_unique<Grouping>(std::move(expr));
     }
 
     throw error(peek(), "Expect expression.");
 }
 
-Expr* Parser::parse() {
+std::unique_ptr<Expr> Parser::parse() {
     try {
         return expression();
     } catch (const ParseError&) {

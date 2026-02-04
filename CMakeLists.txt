@@ -9,4 +9,5 @@ add_executable(cpplox src/main.cpp
     src/Token/Token.cpp
     src/Parser/Parser.cpp
     src/AstPrinter/AstPrinter.cpp
+    src/Interpreter/Interpreter.cpp
 )
