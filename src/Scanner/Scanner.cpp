@@ -2,14 +2,10 @@
 #include "../Lox/Lox.h"
 #include "../Token/TokenType.h"
 #include "../Token/Token.h"
-#include <iostream>
-#include <cctype>
 #include <vector>
 #include <string>
-#include <any>
 
 // NOTE: It fails to handle string literals as of now
-
 const std::unordered_map<std::string, TokenType> Scanner::keywords = {
     {"and",    TokenType::AND},
     {"class",  TokenType::CLASS},
@@ -41,7 +37,7 @@ std::vector<Token> Scanner::scanTokens(){
         scanToken();
     }
 
-    tokens.push_back(Token(TokenType::END_OF_FILE, "", std::any{}, line));
+    tokens.push_back(Token(TokenType::END_OF_FILE, "", Value{}, line));
     return tokens;
 }
 
@@ -197,7 +193,7 @@ void Scanner::addToken(TokenType type){
 }
 
 // Overloaded Function to add token with type and literal
-void Scanner::addToken(TokenType type, std::any literal){
+void Scanner::addToken(TokenType type, Value literal){
     std::string text=source.substr(start, current-start); 
     tokens.push_back(Token(type, text, literal, line));
 }

@@ -61,8 +61,8 @@ void Lox::run(const std::string& source){
     
     // Initialize the parser
     Parser parser(tokens);
-    std::unique_ptr<Expr> expression = parser.parse();
-    if (!expression) {
+    std::vector<std::unique_ptr<Stmt>> statements = parser.parse();
+    if (statements.empty()) {
         std::cerr << "Parser returned nullptr!" << std::endl;
         return;
     }
@@ -70,10 +70,11 @@ void Lox::run(const std::string& source){
     // Stop if there was a syntax error.
     if(hadError) return;
 
-    interpreter.interpret(*expression);
+    // AstPrinter printer;
+    // std::cout << printer.print(statements) << "\n";
 
-    AstPrinter printer;
-    std::cout << printer.print(*expression) << std::endl;
+    // Interpret
+    interpreter.interpret(statements);
 }
 
 void Lox::error(int line, std::string message) {

@@ -7,19 +7,19 @@ std::string AstPrinter::print(const Expr& expr) {
 }
 
 // Visitor Implementation
-std::any AstPrinter::visitBinaryExpr(const Binary& expr) {
+Value AstPrinter::visitBinaryExpr(const Binary& expr) {
     return parenthesize(expr.operator_.lexeme, {*expr.left, *expr.right});
 }
 
-std::any AstPrinter::visitGroupingExpr(const Grouping& expr) {
+Value AstPrinter::visitGroupingExpr(const Grouping& expr) {
     return parenthesize("group", {*expr.expression});
 }
 
-std::any AstPrinter::visitLiteralExpr(const Literal& expr) {
+Value AstPrinter::visitLiteralExpr(const Literal& expr) {
     return expr.toString();
 }
 
-std::any AstPrinter::visitUnaryExpr(const Unary& expr) {
+Value AstPrinter::visitUnaryExpr(const Unary& expr) {
     return parenthesize(expr.operator_.lexeme, {*expr.right});
 }
 

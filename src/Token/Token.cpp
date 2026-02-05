@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <any>
+#include <variant>
 
 std::ostream& operator << (std::ostream& os, const Token& token){
     os << token.toString();
@@ -10,16 +11,15 @@ std::ostream& operator << (std::ostream& os, const Token& token){
 }
 
 // Constructor
-Token::Token(TokenType type, std::string lexeme, std::any literal, int line):
+Token::Token(TokenType type, std::string lexeme, Value literal, int line):
     type(type), lexeme(lexeme), literal(literal), line(line) {}
 
 std::string Token::toString() const {
     std::string literalStr;
-    if(literal.has_value()){
-        if(literal.type() == typeid(std::string)) literalStr = std::any_cast<std::string>(literal);
-        if(literal.type() == typeid(double)) literalStr = std::to_string(std::any_cast<double>(literal));
+    if(!std::holds_alternative<std::monostate>(literal)){
+        if(std::get_if<std::string>(&literal)) literalStr = std::get<std::string>(literal);
+        if(std::get_if<double>(&literal)) literalStr = std::to_string(std::get<double>(literal));
     }
 
     return tokenTypeToString(type) + " " + lexeme + " " + literalStr;
 }
-

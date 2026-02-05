@@ -1,6 +1,7 @@
 #include "Parser.h"
 #include "../Lox/Lox.h"
 #include <memory>
+#include <variant>
 
 // Constructor
 Parser::Parser(std::vector<Token> tokens): tokens(tokens){};
@@ -73,7 +74,7 @@ std::unique_ptr<Expr> Parser::primary(){
     // primary → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
     if (match({FALSE})) return std::make_unique<Literal>(false);
     if (match({TRUE})) return std::make_unique<Literal>(true);
-    if (match({NIL})) return std::make_unique<Literal>(nullptr);
+    if (match({NIL})) return std::make_unique<Literal>(std::monostate{});
 
     if (match({NUMBER, STRING})) {
         return std::make_unique<Literal>(previous().literal);
@@ -88,15 +89,71 @@ std::unique_ptr<Expr> Parser::primary(){
     throw error(peek(), "Expect expression.");
 }
 
-std::unique_ptr<Expr> Parser::parse() {
-    try {
-        return expression();
-    } catch (const ParseError&) {
-        return nullptr;
+std::vector<std::unique_ptr<Stmt>> Parser::parse() {
+    std::vector<std::unique_ptr<Stmt>> statements;
+    while (!isAtEnd()) {
+        statements.push_back(statement());
+    }
+
+    return statements;
+}
+
+// ----------- Nested Class -----------
+Parser::ParseError Parser::error(const Token& token, const std::string& message) {
+    Lox::error(token.line, message);
+    return ParseError(token, message);
+}
+
+// synchronize after panic
+// Checks for a new statement
+void Parser::synchronize() {
+    advance();
+
+    while (!isAtEnd()) {
+        // These Suggests beginning of a new statement
+        if (previous().type == SEMICOLON) return;
+
+        // If you hit any of these return
+        // cause we have hit a new statement
+        // synchronization completed
+        switch (peek().type) { // cleaner than writing a giant if else 
+            case CLASS:
+            case FUN:
+            case VAR:
+            case FOR:
+            case IF:
+            case WHILE:
+            case PRINT:
+            case RETURN:
+                return;
+        }
+
+        advance();
     }
 }
 
 // ------------ Private Helpers ------------
+std::unique_ptr<Stmt> Parser::statement() {
+    if (match({PRINT}))
+        return printStatement();
+
+    return expressionStatement();
+}
+
+std::unique_ptr<Stmt> Parser::printStatement() {
+    std::unique_ptr<Expr> value = expression();
+    consume(SEMICOLON, "Expect ';' after value");
+
+    return std::make_unique<Stmt::Print>(std::move(value));
+}
+
+std::unique_ptr<Stmt> Parser::expressionStatement() {
+    std::unique_ptr<Expr> expr = expression();
+    consume(SEMICOLON, "Expect ';' after expression");
+
+    return std::make_unique<Stmt::Expression>(std::move(expr));
+}
+
 bool Parser::match(std::vector<TokenType> types){
     for(const TokenType& type: types) {
         if(check(type)) {
@@ -142,36 +199,3 @@ Token Parser::previous() {
     return tokens[current-1];
 }
 
-// ----------- Nested Class -----------
-Parser::ParseError Parser::error(const Token& token, const std::string& message) {
-    Lox::error(token.line, message);
-    return ParseError(token, message);
-}
-
-// synchronize after panic
-// Checks for a new statement
-void Parser::synchronize() {
-    advance();
-
-    while (!isAtEnd()) {
-        // These Suggests beginning of a new statement
-        if (previous().type == SEMICOLON ) return;
-
-        // If you hit any of these return
-        // cause we have hit a new statement
-        // synchronization completed
-        switch (peek().type) { // cleaner than writing a giant if else 
-            case CLASS:
-            case FUN:
-            case VAR:
-            case FOR:
-            case IF:
-            case WHILE:
-            case PRINT:
-            case RETURN:
-                return;
-        }
-
-        advance();
-    }
-}

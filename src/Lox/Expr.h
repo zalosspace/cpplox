@@ -11,21 +11,23 @@ class Grouping;
 class Literal;
 class Unary;
 
+using Value = std::variant<std::monostate, double, std::string, bool>;
+
 class Expr {
 public:
     // Visitor pattern 
     struct Visitor {
-        virtual std::any visitBinaryExpr(const Binary& expr) = 0;
-        virtual std::any visitGroupingExpr(const Grouping& expr) = 0;
-        virtual std::any visitLiteralExpr(const Literal& expr) = 0;
-        virtual std::any visitUnaryExpr(const Unary& expr) = 0;
+        virtual Value visitBinaryExpr(const Binary& expr) = 0;
+        virtual Value visitGroupingExpr(const Grouping& expr) = 0;
+        virtual Value visitLiteralExpr(const Literal& expr) = 0;
+        virtual Value visitUnaryExpr(const Unary& expr) = 0;
 
         virtual ~Visitor() = default;
     };
 
     virtual ~Expr() = default;
 
-    virtual std::any accept(Visitor& visitor) const = 0;
+    virtual Value accept(Visitor& visitor) const = 0;
 };
 
 // ------------------ AST Nodes ------------------
@@ -40,7 +42,7 @@ public:
     std::unique_ptr<Expr> right;
 
     // Override
-    std::any accept(Visitor& visitor) const override {
+    Value accept(Visitor& visitor) const override {
         return visitor.visitBinaryExpr(*this);
     }
 };
@@ -53,36 +55,37 @@ public:
     std::unique_ptr<Expr> expression;
 
     // Override
-    std::any accept(Visitor& visitor) const override {
+    Value accept(Visitor& visitor) const override {
         return visitor.visitGroupingExpr(*this);
     }
 };
 
 class Literal : public Expr {
 public:
-    explicit Literal(std::any value)
+    explicit Literal(Value value)
         : value(value) {}
 
-    std::any value;
+    Value value;
 
     // stringify
     std::string toString() const {
-        if (!value.has_value()) return "nil";
+        if (std::holds_alternative<std::monostate>(value)) 
+            return "nil";
 
-        if (value.type() == typeid(double))
-            return std::to_string(std::any_cast<double>(value));
+        if (auto d = std::get_if<double>(&value))
+            return std::to_string(*d);
 
-        if (value.type() == typeid(std::string))
-            return std::any_cast<std::string>(value);
+        if (auto s = std::get_if<std::string>(&value))
+            return *s;
 
-        if (value.type() == typeid(bool))
-            return std::any_cast<bool>(value) ? "true" : "false";
+        if (auto b = std::get_if<bool>(&value))
+            return *b ? "true" : "false";
 
         return "nil";
     }
 
     // Override
-    std::any accept(Visitor& visitor) const override {
+    Value accept(Visitor& visitor) const override {
         return visitor.visitLiteralExpr(*this);
     }
 };
@@ -96,7 +99,7 @@ public:
     std::unique_ptr<Expr> right;
 
     // Override
-    std::any accept(Visitor& visitor) const override {
+    Value accept(Visitor& visitor) const override {
         return visitor.visitUnaryExpr(*this);
     }
 };

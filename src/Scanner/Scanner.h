@@ -37,7 +37,7 @@ private:
     char advance();
     bool isAtEnd();
     void addToken(TokenType type);
-    void addToken(TokenType type, std::any literal);
+    void addToken(TokenType type, Value literal);
 };
 
 #endif

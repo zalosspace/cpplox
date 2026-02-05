@@ -69,3 +69,15 @@ nested subexpressions before reaching the leaves of the syntax tree.
 
 ## Truthiness and falsiness
 In Lox false & nil are *flasey* and everything else is *truthy*.
+
+## Statement and State
+```
+program        → statement* EOF ;
+
+statement      → exprStmt
+               | printStmt ;
+
+exprStmt       → expression ";" ;
+printStmt      → "print" expression ";" ;
+```
+

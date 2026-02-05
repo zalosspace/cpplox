@@ -10,6 +10,7 @@
 #include "../Token/TokenType.h"
 #include "../Token/Token.h"
 #include "../Lox/Expr.h"
+#include "../Lox/Stmt.h"
 
 class Parser {
     private:
@@ -59,7 +60,11 @@ class Parser {
         // Constructor
         Parser(std::vector<Token> tokens);
 
-        std::unique_ptr<Expr> parse();
+        std::vector<std::unique_ptr<Stmt>> parse();
+
+        std::unique_ptr<Stmt> statement();
+        std::unique_ptr<Stmt> printStatement();
+        std::unique_ptr<Stmt> expressionStatement();
 };
 
 #endif
