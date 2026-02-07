@@ -46,15 +46,19 @@ We'll use the same precedence rules as C, going from lowest to highest.
 After applying these to our grammar we'll get our complete Expression Grammar:
 
 ```
-expression     → equality ;
+expression     → assignment ;
+assignment     → IDENTIFIER "=" assignment
+                 | equality;
 equality       → comparison ( ( "!=" | "==" ) comparison )* ;
 comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 term           → factor ( ( "-" | "+" ) factor )* ;
 factor         → unary ( ( "/" | "*" ) unary )* ;
 unary          → ( "!" | "-" ) unary
                | primary ;
-primary        → NUMBER | STRING | "true" | "false" | "nil"
-               | "(" expression ")" ;
+primary        → "true" | "false" | "nil"
+                 | NUMBER | STRING | 
+                 | "(" expression ")"
+                 | IDENTIFIER ;
 ```
 
 ## Parsing Technique
@@ -72,12 +76,16 @@ In Lox false & nil are *flasey* and everything else is *truthy*.
 
 ## Statement and State
 ```
-program        → statement* EOF ;
+program        → declaration* EOF ;
+declaration    → varDecl | statement ;
 
-statement      → exprStmt
-               | printStmt ;
+varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
+statement      → exprStmt | printStmt | block ;
+block          → "{" declaration* "}" ;
 
 exprStmt       → expression ";" ;
 printStmt      → "print" expression ";" ;
 ```
-
+### Environments
+It's a data structure which stores the bindings that associate variables
+to value. Basically it holds variable and it's value.

@@ -10,6 +10,8 @@ class Binary;
 class Grouping;
 class Literal;
 class Unary;
+class Variable;
+class Assign;
 
 using Value = std::variant<std::monostate, double, std::string, bool>;
 
@@ -17,10 +19,12 @@ class Expr {
 public:
     // Visitor pattern 
     struct Visitor {
-        virtual Value visitBinaryExpr(const Binary& expr) = 0;
-        virtual Value visitGroupingExpr(const Grouping& expr) = 0;
-        virtual Value visitLiteralExpr(const Literal& expr) = 0;
-        virtual Value visitUnaryExpr(const Unary& expr) = 0;
+        virtual Value visitBinaryExpr(const Binary& expr) { return {}; };
+        virtual Value visitGroupingExpr(const Grouping& expr) { return {}; };
+        virtual Value visitLiteralExpr(const Literal& expr) { return {}; };
+        virtual Value visitUnaryExpr(const Unary& expr) { return {}; };
+        virtual Value visitVarExpr(const Variable& expr) { return {}; };
+        virtual Value visitAssignExpr(const Assign& expr) { return {}; };
 
         virtual ~Visitor() = default;
     };
@@ -92,11 +96,11 @@ public:
 
 class Unary : public Expr {
 public:
-    Unary(Token operator_, std::unique_ptr<Expr> right)
-        : operator_(operator_), right(std::move(right)) {}
-
     Token operator_;
     std::unique_ptr<Expr> right;
+
+    Unary(Token operator_, std::unique_ptr<Expr> right)
+        : operator_(operator_), right(std::move(right)) {}
 
     // Override
     Value accept(Visitor& visitor) const override {
@@ -104,3 +108,30 @@ public:
     }
 };
 
+class Variable : public Expr {
+public:
+    Token name;
+
+    Variable(Token name)
+        : name(name) {}
+
+    // Override
+    Value accept(Visitor& visitor) const override {
+        return visitor.visitVarExpr(*this);
+    }
+};
+
+class Assign : public Expr {
+public:
+    Token name;
+    std::unique_ptr<Expr> value;
+
+    Assign(Token name, std::unique_ptr<Expr> value)
+        : name(name), value(std::move(value)) {}
+
+
+    // Override
+    Value accept(Visitor& visitor) const override {
+        return visitor.visitAssignExpr(*this);
+    }
+};

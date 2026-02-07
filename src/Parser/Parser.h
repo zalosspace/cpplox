@@ -13,13 +13,29 @@
 #include "../Lox/Stmt.h"
 
 class Parser {
+    public:
+        // Constructor
+        Parser(std::vector<Token> tokens);
+
+        std::vector<std::unique_ptr<Stmt>> parse();
+
+        std::unique_ptr<Stmt> statement();
+        std::unique_ptr<Stmt> declaration();
+        std::unique_ptr<Stmt> printStatement();
+        std::unique_ptr<Stmt> varDeclaration();
+        std::unique_ptr<Stmt> expressionStatement();
+        std::unique_ptr<Stmt> block();
+
     private:
         // Array of Tokens
         std::vector<Token> tokens;
         int current = 0;
 
         // Expression Grammar Function (Low -> High)
+        //expression → assignment ;
         std::unique_ptr<Expr> expression();
+        // assignment → IDENTIFIER "=" assignment | equality;
+        std::unique_ptr<Expr> assignment();
         // equality → comparison ( ( "!=" | "==" ) comparison )* ;
         std::unique_ptr<Expr> equality();
         // comparison → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
@@ -55,16 +71,6 @@ class Parser {
 
         // Synchronize after panic
         void synchronize();
-
-    public:
-        // Constructor
-        Parser(std::vector<Token> tokens);
-
-        std::vector<std::unique_ptr<Stmt>> parse();
-
-        std::unique_ptr<Stmt> statement();
-        std::unique_ptr<Stmt> printStatement();
-        std::unique_ptr<Stmt> expressionStatement();
 };
 
 #endif
