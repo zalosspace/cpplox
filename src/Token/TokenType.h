@@ -72,6 +72,4 @@ inline std::string tokenTypeToString(TokenType type) {
     }
 }
 
-
-
 #endif

@@ -18,9 +18,9 @@ std::unique_ptr<Expr> Parser::assignment() {
         Token equals = previous();
         std::unique_ptr<Expr> value = assignment();
 
-        if (auto var = dynamic_cast<Variable*>(expr.get())) {
+        if (auto var = dynamic_cast<Expr::Variable*>(expr.get())) {
             Token name = var->name;
-            return std::make_unique<Assign>(name, std::move(value));
+            return std::make_unique<Expr::Assign>(name, std::move(value));
         }
 
         throw error(equals, "Invalid assignment target.");
@@ -49,7 +49,7 @@ std::unique_ptr<Expr> Parser::equality(){
     while (match({BANG_EQUAL, EQUAL_EQUAL})) {
         Token operator_ = previous();
         std::unique_ptr<Expr> right = comparison();
-        expr = std::make_unique<Binary>(std::move(expr), operator_, std::move(right));
+        expr = std::make_unique<Expr::Binary>(std::move(expr), operator_, std::move(right));
     }
 
     return expr;
@@ -62,7 +62,7 @@ std::unique_ptr<Expr> Parser::comparison(){
     while (match({GREATER, GREATER_EQUAL, LESS, LESS_EQUAL})) {
         Token operator_ = previous();
         std::unique_ptr<Expr> right = term();
-        expr = std::make_unique<Binary>(std::move(expr), operator_, std::move(right));
+        expr = std::make_unique<Expr::Binary>(std::move(expr), operator_, std::move(right));
     }
     return expr;
 }
@@ -74,7 +74,7 @@ std::unique_ptr<Expr> Parser::term(){
     while (match({MINUS, PLUS})) {
         Token operator_ = previous();
         std::unique_ptr<Expr> right = factor();
-        expr = std::make_unique<Binary>(std::move(expr), operator_, std::move(right));
+        expr = std::make_unique<Expr::Binary>(std::move(expr), operator_, std::move(right));
     }
     return expr;
 }
@@ -86,7 +86,7 @@ std::unique_ptr<Expr> Parser::factor(){
     while (match({SLASH, STAR})) {
         Token operator_ = previous();
         std::unique_ptr<Expr> right = unary();
-        expr = std::make_unique<Binary>(std::move(expr), operator_, std::move(right));
+        expr = std::make_unique<Expr::Binary>(std::move(expr), operator_, std::move(right));
     }
     return expr;
 }
@@ -96,7 +96,7 @@ std::unique_ptr<Expr> Parser::unary(){
     while (match({BANG, MINUS})) {
         Token operator_ = previous();
         std::unique_ptr<Expr> right = unary();
-        return std::make_unique<Unary>(operator_, std::move(right));
+        return std::make_unique<Expr::Unary>(operator_, std::move(right));
     }
 
     return primary();
@@ -104,22 +104,22 @@ std::unique_ptr<Expr> Parser::unary(){
 
 std::unique_ptr<Expr> Parser::primary(){
     // primary → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | IDENTIFIER ;
-    if (match({FALSE})) return std::make_unique<Literal>(false);
-    if (match({TRUE})) return std::make_unique<Literal>(true);
-    if (match({NIL})) return std::make_unique<Literal>(std::monostate{});
+    if (match({FALSE})) return std::make_unique<Expr::Literal>(false);
+    if (match({TRUE})) return std::make_unique<Expr::Literal>(true);
+    if (match({NIL})) return std::make_unique<Expr::Literal>(std::monostate{});
 
     if (match({NUMBER, STRING})) {
-        return std::make_unique<Literal>(previous().literal);
+        return std::make_unique<Expr::Literal>(previous().literal);
     }
 
     if (match({IDENTIFIER})) {
-        return std::make_unique<Variable>(previous());
+        return std::make_unique<Expr::Variable>(previous());
     }
 
     if(match({LEFT_PAREN})) {
         std::unique_ptr<Expr> expr = expression();
         consume(RIGHT_PAREN, "Expect ')' after expression.");
-        return std::make_unique<Grouping>(std::move(expr));
+        return std::make_unique<Expr::Grouping>(std::move(expr));
     }
 
     throw error(peek(), "Expect expression.");
@@ -262,4 +262,3 @@ Token Parser::peek() {
 Token Parser::previous() {
     return tokens[current-1];
 }
-

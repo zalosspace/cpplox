@@ -11,22 +11,24 @@
 using Value = std::variant<std::monostate, double, std::string, bool>;
 
 class Stmt {
-    public:
-        class Expression;
-        class Print;
-        class Var;
-        class Block;
+public:
+    // Nested Class
+    class Expression;
+    class Print;
+    class Var;
+    class Block;
 
-        struct Visitor {
-            virtual Value visitExpressionStmt(const Expression& expr) = 0;
-            virtual Value visitPrintStmt(const Print& expr) = 0;
-            virtual Value visitVarStmt(const Var& stmt) = 0;
-            virtual Value visitBlockStmt(const Block& stmt) = 0;
-            virtual ~Visitor() = default;
-        };
+    // Visitor Function 
+    struct Visitor {
+        virtual Value visitExpressionStmt(const Expression& expr) = 0;
+        virtual Value visitPrintStmt(const Print& expr) = 0;
+        virtual Value visitVarStmt(const Var& stmt) = 0;
+        virtual Value visitBlockStmt(const Block& stmt) = 0;
+        virtual ~Visitor() = default;
+    };
 
-        virtual ~Stmt() = default;
-        virtual Value accept(Visitor& visitor) const = 0;
+    virtual ~Stmt() = default;
+    virtual Value accept(Visitor& visitor) const = 0;
 };
 
 // Nested Class

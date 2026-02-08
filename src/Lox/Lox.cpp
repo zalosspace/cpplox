@@ -17,7 +17,7 @@ Interpreter Lox::interpreter;
 void Lox::runPrompt(){
     while(true){
         std::string line;
-        std::cout << "> ";
+        std::cout << ">> ";
 
         // Take Input
         if(!getline(std::cin, line)) break;
@@ -100,4 +100,3 @@ void Lox::runtimeError(const RuntimeError& error) {
               << "\n[line " << error.token.line << "]\n";
     hadRuntimeError = true;
 }
-

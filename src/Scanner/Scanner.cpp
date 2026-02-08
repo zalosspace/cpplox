@@ -197,4 +197,3 @@ void Scanner::addToken(TokenType type, Value literal){
     std::string text=source.substr(start, current-start); 
     tokens.push_back(Token(type, text, literal, line));
 }
-

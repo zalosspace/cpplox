@@ -6,18 +6,19 @@
 #include <string>
 #include <any>
 
-class Binary;
-class Grouping;
-class Literal;
-class Unary;
-class Variable;
-class Assign;
-
 using Value = std::variant<std::monostate, double, std::string, bool>;
 
 class Expr {
 public:
-    // Visitor pattern 
+    // Nested Class
+    class Binary;
+    class Grouping;
+    class Literal;
+    class Unary;
+    class Variable;
+    class Assign;
+
+    // Visitor Function 
     struct Visitor {
         virtual Value visitBinaryExpr(const Binary& expr) { return {}; };
         virtual Value visitGroupingExpr(const Grouping& expr) { return {}; };
@@ -36,7 +37,7 @@ public:
 
 // ------------------ AST Nodes ------------------
 
-class Binary : public Expr {
+class Expr::Binary : public Expr {
 public:
     Binary(std::unique_ptr<Expr> left, Token operator_, std::unique_ptr<Expr> right)
         : left(std::move(left)), operator_(operator_), right(std::move(right)) {}
@@ -51,7 +52,7 @@ public:
     }
 };
 
-class Grouping : public Expr {
+class Expr::Grouping : public Expr {
 public:
     explicit Grouping(std::unique_ptr<Expr> expression)
         : expression(std::move(expression)) {}
@@ -64,7 +65,7 @@ public:
     }
 };
 
-class Literal : public Expr {
+class Expr::Literal : public Expr {
 public:
     explicit Literal(Value value)
         : value(value) {}
@@ -94,7 +95,7 @@ public:
     }
 };
 
-class Unary : public Expr {
+class Expr::Unary : public Expr {
 public:
     Token operator_;
     std::unique_ptr<Expr> right;
@@ -108,7 +109,7 @@ public:
     }
 };
 
-class Variable : public Expr {
+class Expr::Variable : public Expr {
 public:
     Token name;
 
@@ -121,7 +122,7 @@ public:
     }
 };
 
-class Assign : public Expr {
+class Expr::Assign : public Expr {
 public:
     Token name;
     std::unique_ptr<Expr> value;

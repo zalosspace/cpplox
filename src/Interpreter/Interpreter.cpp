@@ -21,9 +21,9 @@ void Interpreter::interpret(
 }
 
 // ---------- Override Visitor Function ----------
-Value Interpreter::visitLiteralExpr(const Literal &expr) { return expr.value; }
+Value Interpreter::visitLiteralExpr(const Expr::Literal &expr) { return expr.value; }
 
-Value Interpreter::visitUnaryExpr(const Unary &expr) {
+Value Interpreter::visitUnaryExpr(const Expr::Unary &expr) {
   Value right = evaluate(*expr.right);
 
   switch (expr.operator_.type) {
@@ -43,11 +43,11 @@ Value Interpreter::visitUnaryExpr(const Unary &expr) {
   return std::monostate{};
 }
 
-Value Interpreter::visitGroupingExpr(const Grouping &expr) {
+Value Interpreter::visitGroupingExpr(const Expr::Grouping &expr) {
   return expr.expression->accept(*this);
 }
 
-Value Interpreter::visitBinaryExpr(const Binary &expr) {
+Value Interpreter::visitBinaryExpr(const Expr::Binary &expr) {
   Value left = evaluate(*expr.left);
   Value right = evaluate(*expr.right);
 
@@ -117,7 +117,7 @@ Value Interpreter::visitVarStmt(const Stmt::Var& stmt) {
     return std::monostate{};
 }
 
-Value Interpreter::visitVarExpr(const Variable& expr) {
+Value Interpreter::visitVarExpr(const Expr::Variable& expr) {
     return environment->get(expr.name);
 }
 
@@ -223,7 +223,7 @@ Value Interpreter::visitPrintStmt(const Stmt::Print &stmt) {
 }
 
 
-Value Interpreter::visitAssignExpr(const Assign& expr) {
+Value Interpreter::visitAssignExpr(const Expr::Assign& expr) {
     Value value = evaluate(*expr.value);
     environment->assign(expr.name, value);
 
@@ -235,4 +235,3 @@ Value Interpreter::visitBlockStmt(const Stmt::Block& stmt) {
     executeBlock(stmt.statements, newEnv);
     return std::monostate{};
 }
-

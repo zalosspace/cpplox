@@ -15,10 +15,10 @@ public:
           environment(globalEnvironment.get()) {}
 
     // Override
-    Value visitBinaryExpr(const Binary& expr) override;
-    Value visitGroupingExpr(const Grouping& expr) override;
-    Value visitLiteralExpr(const Literal& expr) override;
-    Value visitUnaryExpr(const Unary& expr) override;
+    Value visitBinaryExpr(const Expr::Binary& expr) override;
+    Value visitGroupingExpr(const Expr::Grouping& expr) override;
+    Value visitLiteralExpr(const Expr::Literal& expr) override;
+    Value visitUnaryExpr(const Expr::Unary& expr) override;
 
     // Public API
     void interpret(const std::vector<std::unique_ptr<Stmt>>& statements);
@@ -40,10 +40,10 @@ private:
 
     // Override
     Value visitExpressionStmt(const Stmt::Expression& stmt) override;
-    Value visitVarExpr(const Variable& expr) override;
+    Value visitVarExpr(const Expr::Variable& expr) override;
     Value visitVarStmt(const Stmt::Var& stmt) override;
     Value visitPrintStmt(const Stmt::Print& stmt) override;
-    Value visitAssignExpr(const Assign& expr) override;
+    Value visitAssignExpr(const Expr::Assign& expr) override;
     Value visitBlockStmt(const Stmt::Block& stmt) override;
 
 };
