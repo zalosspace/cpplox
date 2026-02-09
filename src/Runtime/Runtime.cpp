@@ -1,3 +1,8 @@
+#include "Runtime.h"
+#include "../Lexer/Lexer.h"
+#include "../Parser/Parser.h"
+#include "../AstPrinter/AstPrinter.h"
+
 #include <iostream>
 #include <memory>
 #include <vector>
@@ -5,16 +10,11 @@
 #include <string>
 #include <fstream>
 
-#include "Lox.h"
-#include "../Scanner/Scanner.h"
-#include "../Parser/Parser.h"
-#include "../AstPrinter/AstPrinter.h"
+bool Runtime::s_hadError = false;
+bool Runtime::s_hadRuntimeError = false;
+Interpreter Runtime::s_interpreter;
 
-bool Lox::hadError = false;
-bool Lox::hadRuntimeError = false;
-Interpreter Lox::interpreter;
-
-void Lox::runPrompt(){
+int Runtime::launchREPL(){
     while(true){
         std::string line;
         std::cout << ">> ";
@@ -22,38 +22,44 @@ void Lox::runPrompt(){
         // Take Input
         if(!getline(std::cin, line)) break;
         // Run Command
-        Lox::run(line);
+        Runtime::execute(line);
 
         // New line = New start
-        hadError=false;
+        s_hadError=false;
     }
+
+    return 0;
 }
 
-void Lox::runFile(const std::string& path){
+int Runtime::processFile(const std::string& path){
     // File input stream
     std::ifstream file(path);
 
     // Handle file read failure
     if(!file.is_open()){
         std::cerr << "Could not open file: " << path << std::endl;
-        exit(74); // custom exit error code (file read failure)
+        return 74; // I/O error (can't open file)
     }
 
     // Read entire file into buffer
     std::stringstream buffer;
     buffer << file.rdbuf(); 
-    Lox::run(buffer.str());
+    Runtime::execute(buffer.str());
+    
+    if(s_hadError) 
+        return 65; // Data format error (syntax/parse error)
 
-    // Exit If Error Occurs Anywhere 
-    if(hadError) exit(65);
-    if(hadRuntimeError) exit(70);
+    if(s_hadRuntimeError) 
+        return 70; // Internal software error (runtime error)
+
+    return 0; 
 }
 
-void Lox::run(const std::string& source){
+void Runtime::execute(const std::string& source){
     // Initialize the scanner
-    Scanner scanner(source);
+    Lexer lexer(source);
 
-    std::vector<Token> tokens = scanner.scanTokens();
+    std::vector<Token> tokens = lexer.scanTokens();
     // Print all the tokens
     for(const Token& token: tokens){
         std::cout << token << std::endl;
@@ -68,35 +74,35 @@ void Lox::run(const std::string& source){
     }
 
     // Stop if there was a syntax error.
-    if(hadError) return;
+    if(s_hadError) return;
 
     // AstPrinter printer;
     // std::cout << printer.print(statements) << "\n";
 
     // Interpret
-    interpreter.interpret(statements);
+    s_interpreter.interpret(statements);
 }
 
-void Lox::error(int line, std::string message) {
+void Runtime::error(int line, std::string message) {
     report(line, "", message);
 }
 
-void Lox::error(Token token, std::string message){
+void Runtime::error(const Token& token, std::string message){
     if(token.type == TokenType::END_OF_FILE) {
-        Lox::report(token.line, " at end", message);
+        Runtime::report(token.line, " at end", message);
     }
     else {
-        Lox::report(token.line, " at '" + token.lexeme + "'", message);
+        Runtime::report(token.line, " at '" + token.lexeme + "'", message);
     }
 }
 
-void Lox::report(int line, std::string where, std::string message) {
+void Runtime::report(int line, std::string where, std::string message) {
     std::cerr << "[line " << line << "] Error" << where << ": " << message;
-    hadError = true;
+    s_hadError = true;
 }
 
-void Lox::runtimeError(const RuntimeError& error) {
+void Runtime::runtimeError(const RuntimeError& error) {
     std::cerr << error.what()
               << "\n[line " << error.token.line << "]\n";
-    hadRuntimeError = true;
+    s_hadRuntimeError = true;
 }

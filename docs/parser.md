@@ -48,13 +48,17 @@ After applying these to our grammar we'll get our complete Expression Grammar:
 ```
 expression     → assignment ;
 assignment     → IDENTIFIER "=" assignment
-                 | equality;
+                 | logic_or ;
+
+logic_or       → logic_and ( "or" logic_and )* ;
+logic_and      → equality ( "and" equality )* ;
+
 equality       → comparison ( ( "!=" | "==" ) comparison )* ;
 comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 term           → factor ( ( "-" | "+" ) factor )* ;
 factor         → unary ( ( "/" | "*" ) unary )* ;
 unary          → ( "!" | "-" ) unary
-               | primary ;
+                 | primary ;
 primary        → "true" | "false" | "nil"
                  | NUMBER | STRING | 
                  | "(" expression ")"
@@ -80,9 +84,23 @@ program        → declaration* EOF ;
 declaration    → varDecl | statement ;
 
 varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
-statement      → exprStmt | printStmt | block ;
-block          → "{" declaration* "}" ;
+statement      → exprStmt
+               | forStmt 
+               | ifStmt
+               | printStmt
+               | whileStmt
+               | block ;
 
+forStmt        → "for" "(" ( varDecl | exprStmt | ";" )
+                 expression? ";"
+                 expression? ")" statement ;
+
+whileStmt      → "while" "(" expression ")" statement ;
+
+ifStmt         → "if" "(" expression ")" statement
+                 ( "else" statement )? ;
+
+block          → "{" declaration* "}" ;
 exprStmt       → expression ";" ;
 printStmt      → "print" expression ";" ;
 ```

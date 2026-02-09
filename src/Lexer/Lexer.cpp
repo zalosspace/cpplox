@@ -1,12 +1,7 @@
-#include "Scanner.h"
-#include "../Lox/Lox.h"
-#include "../Token/TokenType.h"
-#include "../Token/Token.h"
-#include <vector>
-#include <string>
+#include "Lexer.h"
 
 // NOTE: It fails to handle string literals as of now
-const std::unordered_map<std::string, TokenType> Scanner::keywords = {
+const std::unordered_map<std::string, TokenType> Lexer::keywords = {
     {"and",    TokenType::AND},
     {"class",  TokenType::CLASS},
     {"else",   TokenType::ELSE},
@@ -25,14 +20,11 @@ const std::unordered_map<std::string, TokenType> Scanner::keywords = {
     {"while",  TokenType::WHILE}
 };
 
-// Constructor
-Scanner::Scanner(std::string source): source(source){};
-
 // Array of Tokens
-std::vector<Token> Scanner::scanTokens(){
-    // Keep scanning until we hit end of file 
+std::vector<Token> Lexer::scanTokens(){
+    // Keep scanning until EOF
     while(!isAtEnd()){
-        // point the scanner to current lexeme beginning
+        // Point the scanner to current lexeme beginning
         start=current;
         scanToken();
     }
@@ -41,11 +33,11 @@ std::vector<Token> Scanner::scanTokens(){
     return tokens;
 }
 
-void Scanner::scanToken(){
+void Lexer::scanToken(){
     char c = advance();
 
     switch (c) {
-        // single character match
+        // Single character match
         case '(': addToken(TokenType::LEFT_PAREN); break;
         case ')': addToken(TokenType::RIGHT_PAREN); break;
         case '{': addToken(TokenType::LEFT_BRACE); break;
@@ -93,12 +85,12 @@ void Scanner::scanToken(){
         default: 
                   if(isDigit(c)) number();
                   else if(isAlpha(c)) identifier();
-                  else Lox::error(line, "Unexpected character");
+                  else Runtime::error(line, "Unexpected character");
                   break;
     }
 }
 
-void Scanner::identifier(){
+void Lexer::identifier(){
     while(isAlphaNumeric(peek())){
         advance();
     }
@@ -111,17 +103,21 @@ void Scanner::identifier(){
     addToken(type);
 }
 
-bool Scanner::isAlpha(char c){
+bool Lexer::isAlpha(char c){
     return (c >= 'a' && c <= 'z') || 
            (c >= 'A' && c <= 'Z') || 
            (c == '_'); 
 }
 
-bool Scanner::isAlphaNumeric(char c){
+bool Lexer::isDigit(char c){
+    return c >= '0' && c <= '9';
+}
+
+bool Lexer::isAlphaNumeric(char c){
     return isAlpha(c) || isDigit(c);
 }
 
-void Scanner::number(){
+void Lexer::number(){
     while(isDigit(peek())) advance();
 
     // check for decimal
@@ -133,31 +129,27 @@ void Scanner::number(){
     addToken(TokenType::NUMBER, std::stod(source.substr(start, current-start)));
 }
 
-bool Scanner::isDigit(char c){
-    return c >= '0' && c <= '9';
-}
-
-void Scanner::String(){
+void Lexer::String(){
     while(peek() != '"' && !isAtEnd()){
         if(peek() == '\n') line++;
         advance();
     }
 
     if(isAtEnd()){
-        Lox::error(line, "Unterminated string.");
+        Runtime::error(line, "Unterminated string.");
         return;
     }
 
     advance();
 
-    std::string value = source.substr(start+1, current-start-1);
+    std::string value = source.substr(start+1, current - start - 1);
     addToken(TokenType::STRING, value);
 
     return;
 }
 
 // Function to check character for multiple character lexeme 
-bool Scanner::match(char expected){
+bool Lexer::match(char expected){
     if(isAtEnd()) return false;
     if(source[current] != expected) return false;
 
@@ -165,35 +157,35 @@ bool Scanner::match(char expected){
     return true;
 }
 
-char Scanner::peek(){
-    // Return the next character
-    // Return '\0' if at end of source
+// Return the next character
+// Return '\0' if at end of source
+char Lexer::peek(){
     return isAtEnd() ? '\0' : source[current];
 }
 
-char Scanner::peekNext(){
-    // Return next to next character
-    // Return '\0' if at end of source
+// Return next to next character
+// Return '\0' if at end of source
+char Lexer::peekNext(){
     if(current+1 >= source.size()) return '\0';
     return source[current+1];
 }
 
-char Scanner::advance(){
+char Lexer::advance(){
     current++;
     return source[current-1];
 }
 
-bool Scanner::isAtEnd(){
+bool Lexer::isAtEnd(){
     return current >= source.size();
 }
 
 // Function to add token with only its type 
-void Scanner::addToken(TokenType type){
+void Lexer::addToken(TokenType type){
     addToken(type, "");
 }
 
 // Overloaded Function to add token with type and literal
-void Scanner::addToken(TokenType type, Value literal){
+void Lexer::addToken(TokenType type, Value literal){
     std::string text=source.substr(start, current-start); 
     tokens.push_back(Token(type, text, literal, line));
 }

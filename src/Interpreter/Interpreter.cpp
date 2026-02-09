@@ -1,6 +1,6 @@
 #include "Interpreter.h"
-#include "../Lox/Expr.h"
-#include "../Lox/Lox.h"
+#include "../Runtime/Expr.h"
+#include "../Runtime/Runtime.h"
 #include "../Semantic/Environment.h"
 #include "RuntimeError.h"
 #include <iostream>
@@ -16,12 +16,31 @@ void Interpreter::interpret(
       execute(*statement);
     }
   } catch (RuntimeError error) {
-    Lox::runtimeError(error);
+    Runtime::runtimeError(error);
   }
 }
 
 // ---------- Override Visitor Function ----------
-Value Interpreter::visitLiteralExpr(const Expr::Literal &expr) { return expr.value; }
+Value Interpreter::visitLiteralExpr(const Expr::Literal &expr) { 
+    return expr.value;
+}
+
+Value Interpreter::visitLogicalExpr(const Expr::Logical &expr) { 
+    Value left = evaluate(*expr.left);
+
+    // Or
+    if (expr.operator_.type == TokenType::OR){
+        if (isTruthy(left)) 
+            return left;
+    }
+    // And
+    else { 
+        if (!isTruthy(left)) 
+            return left;
+    }
+
+    return evaluate(*expr.right);
+}
 
 Value Interpreter::visitUnaryExpr(const Expr::Unary &expr) {
   Value right = evaluate(*expr.right);
@@ -117,13 +136,23 @@ Value Interpreter::visitVarStmt(const Stmt::Var& stmt) {
     return std::monostate{};
 }
 
+Value Interpreter::visitWhileStmt(const Stmt::While& stmt) {
+    while (isTruthy(evaluate(*stmt.condition))) {
+        execute(*stmt.body);
+    }
+
+    return std::monostate{};
+}
+
 Value Interpreter::visitVarExpr(const Expr::Variable& expr) {
     return environment->get(expr.name);
 }
 
 // ---------- Private Function ----------
 // ---------- Helper Function ----------
-Value Interpreter::evaluate(const Expr &expr) { return expr.accept(*this); }
+Value Interpreter::evaluate(const Expr &expr) { 
+    return expr.accept(*this);
+}
 
 void Interpreter::execute(const Stmt &stmt) { 
     stmt.accept(*this); 
@@ -215,13 +244,23 @@ Value Interpreter::visitExpressionStmt(const Stmt::Expression &stmt) {
   return std::monostate{};
 }
 
+Value Interpreter::visitIfStmt(const Stmt::If& stmt) {
+    if (isTruthy(evaluate(*stmt.condition))){
+        execute(*stmt.thenBranch);
+    }
+    else if (stmt.elseBranch != nullptr){
+        execute(*stmt.elseBranch);
+    }
+
+    return std::monostate{};
+}
+
 Value Interpreter::visitPrintStmt(const Stmt::Print &stmt) {
   Value value = evaluate(*stmt.expression);
   std::cout << stringify(value) << '\n';
 
   return std::monostate{};
 }
-
 
 Value Interpreter::visitAssignExpr(const Expr::Assign& expr) {
     Value value = evaluate(*expr.value);

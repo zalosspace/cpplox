@@ -34,7 +34,6 @@ public:
         }
         return str;
        }
-
 };
 
 #endif

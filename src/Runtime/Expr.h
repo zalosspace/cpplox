@@ -1,12 +1,12 @@
 #pragma once
 
 #include "../Token/Token.h"
+#include "../Runtime/Value.h"
+
 #include <variant>
 #include <memory>
 #include <string>
 #include <any>
-
-using Value = std::variant<std::monostate, double, std::string, bool>;
 
 class Expr {
 public:
@@ -17,6 +17,7 @@ public:
     class Unary;
     class Variable;
     class Assign;
+    class Logical;
 
     // Visitor Function 
     struct Visitor {
@@ -26,6 +27,7 @@ public:
         virtual Value visitUnaryExpr(const Unary& expr) { return {}; };
         virtual Value visitVarExpr(const Variable& expr) { return {}; };
         virtual Value visitAssignExpr(const Assign& expr) { return {}; };
+        virtual Value visitLogicalExpr(const Logical& expr) { return {}; };
 
         virtual ~Visitor() = default;
     };
@@ -134,5 +136,24 @@ public:
     // Override
     Value accept(Visitor& visitor) const override {
         return visitor.visitAssignExpr(*this);
+    }
+};
+
+class Expr::Logical: public Expr {
+public:
+    std::unique_ptr<Expr> left;
+    Token operator_;
+    std::unique_ptr<Expr> right;
+
+    Logical(std::unique_ptr<Expr> left, 
+            Token operator_,
+            std::unique_ptr<Expr> right)
+        :left(std::move(left)),
+        operator_(std::move(operator_)),
+        right(std::move(right)) {}
+
+    // Override
+    Value accept(Visitor& visitor) const override {
+        return visitor.visitLogicalExpr(*this);
     }
 };

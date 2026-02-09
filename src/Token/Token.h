@@ -2,7 +2,7 @@
 #define TOKEN_H
 
 #include "TokenType.h"
-#include "../Lox/Value.h"
+#include "../Runtime/Value.h"
 #include <ostream>
 #include <string>
 #include <any>

@@ -1,24 +1,21 @@
-#include "Lox/Lox.h"
+#include "Runtime/Runtime.h"
 #include <iostream>
 
-int main(int argc, char* argv[]){
-    std::cout << "Welcome To Cpplox: A Tree-Walk Interpreter" << std::endl;
-
+int main(int argc, char *argv[]){
     // Handle 2 Arguments:
     // 1. cpplox (interpreter)
-    // 2. script (name of the script to run)
+    // 2. script (path of script to run)
     if (argc > 2) {
-        std::cout << "Usage: cpplox [script]";
+        std::cerr << "Usage: cpplox [script]\n";
         return 64; // exit with error
     } 
-    // Run file if path exist
+    // Process file if path exist
     else if (argc == 2) { 
-        Lox::runFile(argv[1]);
+        return Runtime::processFile(argv[1]);
     }
-    // Run Interactive Prompt (REPL) 
+    // Launch Read-Eval-Print Loop (REPL) 
     else {
-        Lox::runPrompt(); 
+        std::cout << "Welcome To Cpplox: A Tree-Walk Interpreter" << std::endl;
+        return Runtime::launchREPL(); 
     }
-
-    return 0;
 }

@@ -17,6 +17,8 @@ public:
     class Print;
     class Var;
     class Block;
+    class If;
+    class While;
 
     // Visitor Function 
     struct Visitor {
@@ -24,6 +26,8 @@ public:
         virtual Value visitPrintStmt(const Print& expr) = 0;
         virtual Value visitVarStmt(const Var& stmt) = 0;
         virtual Value visitBlockStmt(const Block& stmt) = 0;
+        virtual Value visitIfStmt(const If& stmt) = 0;
+        virtual Value visitWhileStmt(const While& stmt) = 0;
         virtual ~Visitor() = default;
     };
 
@@ -78,5 +82,38 @@ public:
 
     Value accept(Visitor& visitor) const override {
         return visitor.visitBlockStmt(*this);
+    }
+};
+
+class Stmt::If : public Stmt {
+public:
+    If(std::unique_ptr<Expr> condition,
+          std::unique_ptr<Stmt> thenBranch,
+          std::unique_ptr<Stmt> elseBranch)
+        : condition(std::move(condition)),
+        thenBranch(std::move(thenBranch)),
+        elseBranch(std::move(elseBranch)) {}
+
+    std::unique_ptr<Expr> condition;
+    std::unique_ptr<Stmt> thenBranch;
+    std::unique_ptr<Stmt> elseBranch;
+
+    Value accept(Visitor& visitor) const override {
+        return visitor.visitIfStmt(*this);
+    }
+};
+
+class Stmt::While : public Stmt {
+public:
+    While(std::unique_ptr<Expr> condition,
+          std::unique_ptr<Stmt> body)
+        : condition(std::move(condition)),
+        body(std::move(body)) {}
+
+    std::unique_ptr<Expr> condition;
+    std::unique_ptr<Stmt> body;
+
+    Value accept(Visitor& visitor) const override {
+        return visitor.visitWhileStmt(*this);
     }
 };

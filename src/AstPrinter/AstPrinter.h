@@ -4,7 +4,7 @@
 #include <iostream>
 #include <string>
 
-#include "../Lox/Expr.h"
+#include "../Runtime/Expr.h"
 
 class AstPrinter: public Expr::Visitor{
     public:

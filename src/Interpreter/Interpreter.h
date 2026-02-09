@@ -1,12 +1,10 @@
 #pragma once
-#ifndef INTERPRETER_H
-#define INTERPRETER_H
+
+#include "../Runtime/Expr.h"
+#include "../Runtime/Stmt.h"
+#include "../Semantic/Environment.h"
 
 #include <vector> 
-
-#include "../Lox/Expr.h"
-#include "../Lox/Stmt.h"
-#include "../Semantic/Environment.h"
 
 class Interpreter : public Expr::Visitor, Stmt::Visitor {
 public:
@@ -18,6 +16,7 @@ public:
     Value visitBinaryExpr(const Expr::Binary& expr) override;
     Value visitGroupingExpr(const Expr::Grouping& expr) override;
     Value visitLiteralExpr(const Expr::Literal& expr) override;
+    Value visitLogicalExpr(const Expr::Logical &expr) override;
     Value visitUnaryExpr(const Expr::Unary& expr) override;
 
     // Public API
@@ -39,13 +38,13 @@ private:
     void checkNumberOperands(Token operator_, Value left, Value right);
 
     // Override
-    Value visitExpressionStmt(const Stmt::Expression& stmt) override;
     Value visitVarExpr(const Expr::Variable& expr) override;
-    Value visitVarStmt(const Stmt::Var& stmt) override;
-    Value visitPrintStmt(const Stmt::Print& stmt) override;
     Value visitAssignExpr(const Expr::Assign& expr) override;
+
+    Value visitExpressionStmt(const Stmt::Expression& stmt) override;
+    Value visitVarStmt(const Stmt::Var& stmt) override;
+    Value visitWhileStmt(const Stmt::While& stmt) override;
+    Value visitPrintStmt(const Stmt::Print& stmt) override;
     Value visitBlockStmt(const Stmt::Block& stmt) override;
-
+    Value visitIfStmt(const Stmt::If& stmt) override;
 };
-
-#endif
