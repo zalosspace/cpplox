@@ -1,14 +1,15 @@
 #pragma once
 
 #include "../Token/Token.h"
-#include "Expr.h"
+#include "../Token/Token.h"
+#include "../Runtime/Value.h"
+#include "../Runtime/Expr.h"
+
 #include <utility>
 #include <variant>
 #include <memory>
 #include <string>
 #include <vector>
-
-using Value = std::variant<std::monostate, double, std::string, bool>;
 
 class Stmt {
 public:
@@ -19,6 +20,8 @@ public:
     class Block;
     class If;
     class While;
+    class Function;
+    class Return;
 
     // Visitor Function 
     struct Visitor {
@@ -28,6 +31,9 @@ public:
         virtual Value visitBlockStmt(const Block& stmt) = 0;
         virtual Value visitIfStmt(const If& stmt) = 0;
         virtual Value visitWhileStmt(const While& stmt) = 0;
+        virtual Value visitFunctionStmt(const Function& stmt) = 0;
+        virtual Value visitReturnStmt(const Return& stmt) = 0;
+
         virtual ~Visitor() = default;
     };
 
@@ -115,5 +121,34 @@ public:
 
     Value accept(Visitor& visitor) const override {
         return visitor.visitWhileStmt(*this);
+    }
+};
+
+class Stmt::Function : public Stmt {
+public:
+    Token name;
+    std::vector<Token> params;
+    std::vector<std::unique_ptr<Stmt>> body;
+
+    Function(Token name,
+             std::vector<Token> params,
+             std::vector<std::unique_ptr<Stmt>> body)
+      : name(name), params(std::move(params)), body(std::move(body)) {}
+
+    Value accept(Visitor& visitor) const override {
+        return visitor.visitFunctionStmt(*this);
+    }
+};
+
+class Stmt::Return : public Stmt {
+public:
+    Token keyword;
+    std::unique_ptr<Expr> value;
+
+    Return(Token keyword, std::unique_ptr<Expr> value)
+      : keyword(keyword), value(std::move(value)) {}
+
+    Value accept(Visitor& visitor) const override {
+        return visitor.visitReturnStmt(*this);
     }
 };

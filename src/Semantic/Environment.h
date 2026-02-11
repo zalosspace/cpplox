@@ -1,26 +1,23 @@
 #pragma once
 
-#ifndef ENVIRONMENT_H
-#define ENVIRONMENT_H
-
 #include "../Runtime/Value.h"
 #include "../Token/Token.h"
+
+#include <memory>
 #include <unordered_map>
+#include <string>
 
 class Environment {
 public:
-    Environment()
-    : enclosing(nullptr) {}
+    std::unordered_map<std::string, Value> values;
+    std::shared_ptr<Environment> enclosing;
 
-    Environment(Environment* enclosing)
+    Environment() = default;
+
+    Environment(std::shared_ptr<Environment> enclosing)
     : enclosing(enclosing) {}
 
-    Environment* const enclosing;
-    std::unordered_map<std::string, Value> values;
-
-    Value get(Token name);
-    void define(std::string name, Value value);
-    void assign(Token name, Value value);
+    Value get(const Token& name);
+    void define(const std::string& name, const Value& value);
+    void assign(const Token& name, const Value& value);
 };
-
-#endif

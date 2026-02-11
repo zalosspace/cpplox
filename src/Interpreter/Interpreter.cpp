@@ -1,9 +1,9 @@
 #include "Interpreter.h"
-#include "../Runtime/Expr.h"
+
 #include "../Runtime/Runtime.h"
-#include "../Semantic/Environment.h"
-#include "RuntimeError.h"
-#include <iostream>
+#include "../Include/LoxCallable.h"
+#include "../Include/LoxFunction.h"
+
 #include <memory>
 #include <string>
 #include <variant>
@@ -125,6 +125,10 @@ Value Interpreter::visitBinaryExpr(const Expr::Binary &expr) {
   return std::monostate{};
 }
 
+Value Interpreter::visitVarExpr(const Expr::Variable& expr) {
+    return environment->get(expr.name);
+}
+
 Value Interpreter::visitVarStmt(const Stmt::Var& stmt) {
     Value value = std::monostate{};
 
@@ -144,10 +148,6 @@ Value Interpreter::visitWhileStmt(const Stmt::While& stmt) {
     return std::monostate{};
 }
 
-Value Interpreter::visitVarExpr(const Expr::Variable& expr) {
-    return environment->get(expr.name);
-}
-
 // ---------- Private Function ----------
 // ---------- Helper Function ----------
 Value Interpreter::evaluate(const Expr &expr) { 
@@ -160,25 +160,23 @@ void Interpreter::execute(const Stmt &stmt) {
 
 void Interpreter::executeBlock(
     const std::vector<std::unique_ptr<Stmt>>& statements,
-    Environment& newEnv)
+    std::shared_ptr<Environment> newEnv)
 {
-    // RAII guard to restore environment
-    struct EnvironmentGuard {
-        Environment** envPtr;
-        Environment* previous;
-        
-        EnvironmentGuard(Environment** env, Environment* prev) 
-            : envPtr(env), previous(prev) {}
-        
-        ~EnvironmentGuard() { *envPtr = previous; }
-    };
-    
-    EnvironmentGuard guard(&environment, environment);
-    environment = &newEnv;
-    
-    for (const auto& stmt : statements) {
-        execute(*stmt);
+    auto previous = environment;
+
+    try {
+        environment = newEnv;
+
+        for (const auto& stmt : statements) {
+            execute(*stmt);
+        }
     }
+    catch (...) {
+        environment = previous;
+        throw;
+    }
+
+    environment = previous;
 }
 
 bool Interpreter::isTruthy(const Value &value) {
@@ -244,6 +242,17 @@ Value Interpreter::visitExpressionStmt(const Stmt::Expression &stmt) {
   return std::monostate{};
 }
 
+Value Interpreter::visitFunctionStmt(const Stmt::Function& stmt) {
+    // Wrap the function declaration in a LoxFunction
+    std::shared_ptr<LoxCallable> function =
+        std::make_shared<LoxFunction>(&stmt, environment);
+
+    // Store it in the environment as a Value
+    environment->define(stmt.name.lexeme, Value(function));
+
+    return std::monostate{}; // functions don't return a value
+}
+
 Value Interpreter::visitIfStmt(const Stmt::If& stmt) {
     if (isTruthy(evaluate(*stmt.condition))){
         execute(*stmt.thenBranch);
@@ -255,11 +264,21 @@ Value Interpreter::visitIfStmt(const Stmt::If& stmt) {
     return std::monostate{};
 }
 
-Value Interpreter::visitPrintStmt(const Stmt::Print &stmt) {
+Value Interpreter::visitPrintStmt(const Stmt::Print& stmt) {
   Value value = evaluate(*stmt.expression);
   std::cout << stringify(value) << '\n';
 
   return std::monostate{};
+}
+
+Value Interpreter::visitReturnStmt(const Stmt::Return& stmt) {
+    Value value = std::monostate{};
+
+    if (stmt.value != nullptr)
+        value = evaluate(*stmt.value);
+
+    // Returns value to the caller
+    throw Return(value);
 }
 
 Value Interpreter::visitAssignExpr(const Expr::Assign& expr) {
@@ -269,8 +288,33 @@ Value Interpreter::visitAssignExpr(const Expr::Assign& expr) {
     return value;
 }
 
+Value Interpreter::visitCallExpr(const Expr::Call& expr) {
+    Value callee = evaluate(*expr.callee);
+
+    std::vector<Value> arguments;
+    for (const auto& argument: expr.arguments){
+        arguments.push_back(evaluate(*argument));
+    }
+
+    if (!(std::holds_alternative<std::shared_ptr<LoxCallable>>(callee))) {
+        throw RuntimeError(expr.paren,
+                           "Can only call function and classes.");
+    }
+
+    std::shared_ptr<LoxCallable> function = std::get<std::shared_ptr<LoxCallable>>(callee);
+
+    if (arguments.size() != function->arity()) {
+        throw RuntimeError(expr.paren,
+                           "Expected " + std::to_string(function->arity()) +
+                           " arguments but got " + 
+                           std::to_string(arguments.size()) + ".");
+    }
+
+    return function->call(this, arguments);
+}
+
 Value Interpreter::visitBlockStmt(const Stmt::Block& stmt) {
-    Environment newEnv(environment);
+    std::shared_ptr<Environment> newEnv = std::make_shared<Environment>(environment);
     executeBlock(stmt.statements, newEnv);
     return std::monostate{};
 }

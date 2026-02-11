@@ -97,7 +97,7 @@ void Runtime::error(const Token& token, std::string message){
 }
 
 void Runtime::report(int line, std::string where, std::string message) {
-    std::cerr << "[line " << line << "] Error" << where << ": " << message;
+    std::cerr << "[line " << line << "] Error" << where << ": " << message << '\n';
     s_hadError = true;
 }
 

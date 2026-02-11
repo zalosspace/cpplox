@@ -48,6 +48,7 @@ void Lexer::scanToken(){
         case '+': addToken(TokenType::PLUS); break;
         case ';': addToken(TokenType::SEMICOLON); break;
         case '*': addToken(TokenType::STAR); break;
+        case '"': String(); break;
 
         // multiple character match
         case '!':
@@ -83,10 +84,10 @@ void Lexer::scanToken(){
 
         // literals
         default: 
-                  if(isDigit(c)) number();
-                  else if(isAlpha(c)) identifier();
-                  else Runtime::error(line, "Unexpected character");
-                  break;
+            if (isDigit(c)) number();
+            else if (isAlpha(c)) identifier();
+            else Runtime::error (line, "Unexpected character");
+            break;
     }
 }
 
@@ -122,7 +123,7 @@ void Lexer::number(){
 
     // check for decimal
     if(peek() == '.' && isDigit(peekNext())){
-        advance(); // consume .
+        advance(); // consume.
         while(isDigit(peek())) advance();
     }
 
@@ -142,10 +143,8 @@ void Lexer::String(){
 
     advance();
 
-    std::string value = source.substr(start+1, current - start - 1);
+    std::string value = source.substr(start + 1, current - start - 2);
     addToken(TokenType::STRING, value);
-
-    return;
 }
 
 // Function to check character for multiple character lexeme 

@@ -7,6 +7,7 @@
 #include <memory>
 #include <string>
 #include <any>
+#include <vector>
 
 class Expr {
 public:
@@ -18,6 +19,7 @@ public:
     class Variable;
     class Assign;
     class Logical;
+    class Call;
 
     // Visitor Function 
     struct Visitor {
@@ -28,6 +30,7 @@ public:
         virtual Value visitVarExpr(const Variable& expr) { return {}; };
         virtual Value visitAssignExpr(const Assign& expr) { return {}; };
         virtual Value visitLogicalExpr(const Logical& expr) { return {}; };
+        virtual Value visitCallExpr(const Call& expr) { return {}; };
 
         virtual ~Visitor() = default;
     };
@@ -155,5 +158,24 @@ public:
     // Override
     Value accept(Visitor& visitor) const override {
         return visitor.visitLogicalExpr(*this);
+    }
+};
+
+class Expr::Call: public Expr {
+public:
+    std::unique_ptr<Expr> callee;
+    Token paren;
+    std::vector<std::unique_ptr<Expr>> arguments;
+
+    Call(std::unique_ptr<Expr> callee, 
+            Token paren,
+            std::vector<std::unique_ptr<Expr>> arguments)
+        :callee(std::move(callee)),
+        paren(std::move(paren)),
+        arguments(std::move(arguments)) {}
+
+    // Override
+    Value accept(Visitor& visitor) const override {
+        return visitor.visitCallExpr(*this);
     }
 };

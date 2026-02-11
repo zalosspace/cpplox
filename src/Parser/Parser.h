@@ -22,11 +22,13 @@ public:
     std::unique_ptr<Stmt> declaration();
     std::unique_ptr<Stmt> ifStatement();
     std::unique_ptr<Stmt> printStatement();
+    std::unique_ptr<Stmt> returnStatement();
     std::unique_ptr<Stmt> varDeclaration();
     std::unique_ptr<Stmt> forStatement();
     std::unique_ptr<Stmt> whileStatement();
     std::unique_ptr<Stmt> expressionStatement();
-    std::unique_ptr<Stmt> block();
+    std::unique_ptr<Stmt::Function> function(std::string kind);
+    std::vector<std::unique_ptr<Stmt>> block();
 
 private:
     // Array of Tokens
@@ -50,12 +52,16 @@ private:
     std::unique_ptr<Expr> term();
     // factor → unary ( ( "/" | "*" ) unary )* ;
     std::unique_ptr<Expr> factor();
-    // unary → ( "!" | "-" ) unary | primary ;
+    // unary → ( "!" | "-" ) unary | call ;
     std::unique_ptr<Expr> unary();
+    // call → primary ( "(" arguments? ")" )* ;
+    std::unique_ptr<Expr> call();
+    // arguments → expression ( "," expression )* ;
     // primary → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
     std::unique_ptr<Expr> primary();
 
     // Helper Function
+    std::unique_ptr<Expr> finishCall(std::unique_ptr<Expr>& callee);
     bool match(std::vector<TokenType> types);
     bool check(TokenType type);
     bool isAtEnd();

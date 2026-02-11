@@ -1,5 +1,15 @@
 #pragma once
+
+#include <memory>
 #include <variant>
 #include <string>
 
-using Value = std::variant<std::monostate, double, std::string, bool>;
+class LoxCallable;
+
+using Value = std::variant<
+std::monostate,
+std::string,
+std::shared_ptr<LoxCallable>,
+double, 
+bool
+>;

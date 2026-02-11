@@ -1,4 +1,4 @@
-# Rules for grammars
+# Rules for grammars - BNF Variant
 ## Keywords
 - Productions: Set of rules for grammar.
 - Derivations: Strings created by following productions.

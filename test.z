@@ -1,9 +1,13 @@
-// check if user is eligible to drive
+fun makeCounter() {
+  var i = 0;
+  fun count() {
+    i = i + 1;
+    print i;
+  }
 
-int age=69;
-if(age>=18) {
-    print("Yes");
+  return count;
 }
-else {
-    print("Nah! I'd Win");
-}
+
+var counter = makeCounter();
+counter(); // 1.
+counter(); // 2.

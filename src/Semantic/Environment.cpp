@@ -2,7 +2,7 @@
 #include "../Interpreter/RuntimeError.h"
 
 // Searches from nested to parent
-Value Environment::get(Token name){
+Value Environment::get(const Token& name){
     if (values.count(name.lexeme)) {
         return values[name.lexeme];
     }
@@ -14,11 +14,11 @@ Value Environment::get(Token name){
                            "Undefined variable '" + name.lexeme + "'.");
 }
 
-void Environment::define(std::string name, Value value){
+void Environment::define(const std::string& name, const Value& value){
     values[name] = value;
 }
 
-void Environment::assign(Token name, Value value) {
+void Environment::assign(const Token& name, const Value& value) {
     if (values.count(name.lexeme)) {
         values[name.lexeme] = value;
         return;

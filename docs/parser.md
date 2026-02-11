@@ -1,28 +1,5 @@
 # Parser Expression Grammar
-```
-expression     → literal
-               | unary
-               | binary
-               | grouping ;
-
-literal        → NUMBER | STRING | "true" | "false" | "nil" ;
-grouping       → "(" expression ")" ;
-unary          → ( "-" | "!" ) expression ;
-binary         → expression operator expression ;
-operator       → "==" | "!=" | "<" | "<=" | ">" | ">="
-               | "+"  | "-"  | "*" | "/" ;
-```
-
-## Note: Current Expression Grammar Can Lead To False Results
-`6/3-1`
-Two ways to interpret this using our current syntax:- 
-- (6 / (3 - 1))
-- ((6 / 3) - 1))
-
-Both fits in our current grammar but both doesn't output the same result so,
-we need a more sophisticated syntax.
-
-## Upgrade Syntax
+## Syntax
 - __**Precedence**__: determines which operator is evaluated first in an expression 
 containing a mixture of different operators. Precedence rules tell us that 
 we evaluate the / before the - in the above example.
@@ -32,7 +9,7 @@ of the same operator. When an operator is **left-associative**
 `( 5 - 3 ) - 1` but if the operator is **right-associative** it would be 
 equaluated accordingly for examle `a = b = c` -> `a = ( b = c)`.
 
-### Our Rules
+### Rules
 We'll use the same precedence rules as C, going from lowest to highest.
 
 | Name       | Operators   | Associates |
@@ -42,8 +19,6 @@ We'll use the same precedence rules as C, going from lowest to highest.
 | Term       | -, +       | Left       |
 | Factor     | /, *       | Left       |
 | Unary      | !, -       | Right      |
-
-After applying these to our grammar we'll get our complete Expression Grammar:
 
 ```
 expression     → assignment ;
@@ -55,10 +30,14 @@ logic_and      → equality ( "and" equality )* ;
 
 equality       → comparison ( ( "!=" | "==" ) comparison )* ;
 comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
+
 term           → factor ( ( "-" | "+" ) factor )* ;
 factor         → unary ( ( "/" | "*" ) unary )* ;
-unary          → ( "!" | "-" ) unary
-                 | primary ;
+
+unary          → ( "!" | "-" ) unary | call ;
+call           → primary ( "(" arguments? ")" )* ;
+arguments      → expression ( "," expression )* ;
+
 primary        → "true" | "false" | "nil"
                  | NUMBER | STRING | 
                  | "(" expression ")"
@@ -81,15 +60,24 @@ In Lox false & nil are *flasey* and everything else is *truthy*.
 ## Statement and State
 ```
 program        → declaration* EOF ;
-declaration    → varDecl | statement ;
+declaration    → funDecl
+               | varDecl
+               | statement ;
+
+funDecl        → "fun" function ;
+function       → IDENTIFIER "(" parameters? ")" block ;
+parameters     → IDENTIFIER ( "," IDENTIFIER )* block ;
 
 varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 statement      → exprStmt
                | forStmt 
                | ifStmt
                | printStmt
+               | returnStmt 
                | whileStmt
                | block ;
+
+returnStmt     → "return" expression? ";" ;
 
 forStmt        → "for" "(" ( varDecl | exprStmt | ";" )
                  expression? ";"
