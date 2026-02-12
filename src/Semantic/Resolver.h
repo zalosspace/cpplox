@@ -7,6 +7,11 @@
 #include <stack>
 #include <unordered_map>
 
+enum FunctionType {
+    NONE,
+    FUNCTION
+};
+
 class Resolver : public Expr::Visitor, public Stmt::Visitor {
 public:
     Resolver(Interpreter& interpreter)
@@ -30,13 +35,15 @@ public:
     Value visitUnaryExpr(const Expr::Unary& expr) override;
     Value visitVarExpr(const Expr::Variable& expr) override;
 
+    void resolve(const std::vector<std::unique_ptr<Stmt>>& statements);
+
 private:
     // Keep track of variable initialization
-    std::vector<std::unordered_map<std::string, bool>> scopes;
     Interpreter& interpreter;
+    std::vector<std::unordered_map<std::string, bool>> scopes;
+    FunctionType currentFunction = FunctionType::NONE;
 
     // Helpers
-    void resolve(const std::vector<std::unique_ptr<Stmt>>& statements);
     void resolve(Stmt& stmt);
     void resolve(Expr& expr);
 
@@ -48,4 +55,6 @@ private:
     void define(const Token& name);
     void resolveLocal(const Expr& expr, const Token& name);
     void resolveFunction(const Stmt::Function& function);
+    void resolveFunction(const Stmt::Function& function,
+                         const FunctionType& type);
 };

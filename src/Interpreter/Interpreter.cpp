@@ -126,7 +126,22 @@ Value Interpreter::visitBinaryExpr(const Expr::Binary &expr) {
 }
 
 Value Interpreter::visitVarExpr(const Expr::Variable& expr) {
-    return environment->get(expr.name);
+    return lookUpVariable(expr.name, expr);
+}
+
+Value Interpreter::lookUpVariable(
+    const Token& name, 
+    const Expr::Variable& expr)
+{
+    auto it = locals.find(&expr);
+    
+    if (it != locals.end()) {
+        int distance = it->second;
+        return environment->getAt(distance, name.lexeme);
+    }
+    else {
+        return globals->get(name);
+    }
 }
 
 Value Interpreter::visitVarStmt(const Stmt::Var& stmt) {
@@ -150,12 +165,16 @@ Value Interpreter::visitWhileStmt(const Stmt::While& stmt) {
 
 // ---------- Private Function ----------
 // ---------- Helper Function ----------
-Value Interpreter::evaluate(const Expr &expr) { 
+Value Interpreter::evaluate(const Expr& expr) { 
     return expr.accept(*this);
 }
 
-void Interpreter::execute(const Stmt &stmt) { 
+void Interpreter::execute(const Stmt& stmt) { 
     stmt.accept(*this); 
+}
+
+void Interpreter::resolve(const Expr& expr, int depth) {
+    locals[&expr] = depth;
 }
 
 void Interpreter::executeBlock(
@@ -283,7 +302,15 @@ Value Interpreter::visitReturnStmt(const Stmt::Return& stmt) {
 
 Value Interpreter::visitAssignExpr(const Expr::Assign& expr) {
     Value value = evaluate(*expr.value);
-    environment->assign(expr.name, value);
+
+    auto it = locals.find(&expr);
+
+    if (it != locals.end()) {
+        int distance = it->second;
+        environment->assignAt(distance, expr.name, value);
+    } else {
+        globals->assign(expr.name, value);
+    }
 
     return value;
 }

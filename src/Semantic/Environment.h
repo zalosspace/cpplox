@@ -19,5 +19,8 @@ public:
 
     Value get(const Token& name);
     void define(const std::string& name, const Value& value);
+    Environment* ancestor(int distance);
+    Value getAt(int distance, const std::string& name);
+    void assignAt(int distance, const Token& name, Value value);
     void assign(const Token& name, const Value& value);
 };

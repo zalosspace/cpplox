@@ -11,6 +11,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <variant>
 #include <vector> 
 
@@ -18,6 +19,7 @@ class Interpreter : public Expr::Visitor, Stmt::Visitor {
 public:
     std::shared_ptr<Environment> globals;
     std::shared_ptr<Environment> environment;
+    std::unordered_map<const Expr*, int> locals;
 
     Interpreter() 
         : globals(std::make_shared<Environment>()),
@@ -43,8 +45,9 @@ public:
         const std::vector<std::unique_ptr<Stmt>>& statements,
         std::shared_ptr<Environment> newEnv);
 
-private:
+    void resolve(const Expr& expr, int depth);
 
+private:
     Value evaluate(const Expr& expr); 
     void execute(const Stmt& stmt);
     bool isTruthy(const Value& value);
@@ -52,6 +55,7 @@ private:
     std::string stringify(const Value& value);
     void checkNumberOperand(Token operator_, Value operand);
     void checkNumberOperands(Token operator_, Value left, Value right);
+    Value lookUpVariable(const Token& name, const Expr::Variable& expr);
 
     // Override
     Value visitVarExpr(const Expr::Variable& expr) override;

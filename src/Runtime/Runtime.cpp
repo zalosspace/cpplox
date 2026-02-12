@@ -1,6 +1,7 @@
 #include "Runtime.h"
 #include "../Lexer/Lexer.h"
 #include "../Parser/Parser.h"
+#include "../Semantic/Resolver.h"
 #include "../AstPrinter/AstPrinter.h"
 
 #include <iostream>
@@ -78,6 +79,11 @@ void Runtime::execute(const std::string& source){
 
     // AstPrinter printer;
     // std::cout << printer.print(statements) << "\n";
+
+    Resolver resolver(s_interpreter);
+    resolver.resolve(statements);
+
+    if(s_hadError) return;
 
     // Interpret
     s_interpreter.interpret(statements);

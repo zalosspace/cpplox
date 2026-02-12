@@ -11,4 +11,5 @@ add_executable(cpplox src/main.cpp
     src/AstPrinter/AstPrinter.cpp
     src/Interpreter/Interpreter.cpp
     src/Semantic/Environment.cpp
+    src/Semantic/Resolver.cpp
 )

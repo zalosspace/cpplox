@@ -21,7 +21,7 @@ Value Resolver::visitFunctionStmt(const Stmt::Function& stmt) {
     declare(stmt.name);
     define(stmt.name);
 
-    resolveFunction(stmt);
+    resolveFunction(stmt, FunctionType::FUNCTION);
 
     return std::monostate{};
 }
@@ -43,6 +43,11 @@ Value Resolver::visitPrintStmt(const Stmt::Print& stmt) {
 }
 
 Value Resolver::visitReturnStmt(const Stmt::Return& stmt) {
+    if (currentFunction == FunctionType::NONE) {
+        Runtime::error(stmt.keyword, 
+                       "Can't return from top-level");
+    }
+
     if (stmt.value != nullptr) {
         resolve(*stmt.value);
     }
@@ -160,6 +165,13 @@ void Resolver::declare(const Token& name) {
     if (scopes.empty()) return;
 
     auto& scope = scopes.back();
+    
+    if (scope.count(name.lexeme)) {
+        Runtime::error(
+            name,
+            "Already a variable with this name in this scope.");
+    }
+
     scope[name.lexeme] = false;
 }
 
@@ -167,7 +179,7 @@ void Resolver::define(const Token& name) {
     if (scopes.empty()) return;
 
     auto& scope = scopes.back();
-    scope[name.lexeme] = false;
+    scope[name.lexeme] = true;
 }
 
 void Resolver::resolveLocal(const Expr& expr, const Token& name) {
@@ -181,7 +193,13 @@ void Resolver::resolveLocal(const Expr& expr, const Token& name) {
     }
 }
 
-void Resolver::resolveFunction(const Stmt::Function& function) {
+void Resolver::resolveFunction(
+    const Stmt::Function& function,
+    const FunctionType& type) 
+{
+    FunctionType enclosingFunction = currentFunction;
+    currentFunction = type;
+
     beginScope();
 
     for (const Token& param: function.params) {
@@ -192,4 +210,6 @@ void Resolver::resolveFunction(const Stmt::Function& function) {
     resolve(function.body);
 
     endScope();
+
+    currentFunction = enclosingFunction;
 }
