@@ -16,6 +16,18 @@ A token is the label or category your language gives to that lexeme.
 - "69" → NUMBER_LITERAL
 - ";" → SEMICOLON
 
+### Semantic Analysis
+A powerful technique for extracting meaning from the user's source code
+without having to execute it.
+
+### Currying
+Breaking a *multi-argument* function into a chain of single argument 
+functions.
+
+### Closures
+A closure is a function that persists the environment in which 
+it was created, allowing it to access surrounding variables later.
+
 ## Frontend
 ### Scanning
 Also known as lexing (lexical analysis), A scanner/lexer takes in the
@@ -67,21 +79,16 @@ the entire source file.
 
 ## Tree-walk Interpreters
 Some programming languages begin executing code right after parsing 
-it to an AST (with maybe a bit of static analysis applied).
+it to an AST, with maybe a bit of static analysis applied.
 
 It's not widely used for general-purpose languages since it tends to be
-slow.
+**slow**.
 
 ## Transpilers
-Transpiler as known as source-to-source compiler is a tool that 
+Transpiler are known as source-to-source compiler is a tool that 
 takes code of one language and converts it into another language so that
 developer don't have write a full fledged language.
 
 ## Just-In-Time Compilation
 JIT compiles the code at runtime on the fly...
 Alien Tech.
-
-
-
-
-

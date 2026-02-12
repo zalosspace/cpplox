@@ -25,8 +25,8 @@ public:
 
     // Visitor Function 
     struct Visitor {
-        virtual Value visitExpressionStmt(const Expression& expr) = 0;
-        virtual Value visitPrintStmt(const Print& expr) = 0;
+        virtual Value visitExpressionStmt(const Expression& stmt) = 0;
+        virtual Value visitPrintStmt(const Print& stmt) = 0;
         virtual Value visitVarStmt(const Var& stmt) = 0;
         virtual Value visitBlockStmt(const Block& stmt) = 0;
         virtual Value visitIfStmt(const If& stmt) = 0;
