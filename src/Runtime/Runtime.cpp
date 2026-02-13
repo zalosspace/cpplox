@@ -77,8 +77,8 @@ void Runtime::execute(const std::string& source){
     // Stop if there was a syntax error.
     if(s_hadError) return;
 
-    // AstPrinter printer;
-    // std::cout << printer.print(statements) << "\n";
+    AstPrinter printer;
+    printer.print(statements);
 
     Resolver resolver(s_interpreter);
     resolver.resolve(statements);

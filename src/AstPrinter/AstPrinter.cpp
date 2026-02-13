@@ -1,12 +1,23 @@
 #include "AstPrinter.h"
-#include <any>
 #include <functional>
 
 std::string AstPrinter::print(const Expr& expr) {
-    return std::any_cast<std::string>(expr.accept(*this));
+    return std::get<std::string>(expr.accept(*this));
 }
 
-// Visitor Implementation
+std::string AstPrinter::print(const Stmt& stmt) {
+    Value result = stmt.accept(*this);
+    if (auto s = std::get_if<std::string>(&result)) return *s;
+    return ""; 
+}
+
+void AstPrinter::print(const std::vector<std::unique_ptr<Stmt>>& statements) {
+    for (const auto& stmt : statements) {
+        std::cout << print(*stmt) << "\n";
+    }
+}
+
+// ---------- Expr Visitor Implementation ---------- 
 Value AstPrinter::visitBinaryExpr(const Expr::Binary& expr) {
     return parenthesize(expr.operator_.lexeme, {*expr.left, *expr.right});
 }
@@ -23,14 +34,19 @@ Value AstPrinter::visitUnaryExpr(const Expr::Unary& expr) {
     return parenthesize(expr.operator_.lexeme, {*expr.right});
 }
 
+// ---------- Stmt Visitor Implementation ---------- 
+Value AstPrinter::visitExpressionStmt(const Stmt::Expression& stmt) {
+    return print(*stmt.expression);
+}
+
 // Private Implementation 
 std::string AstPrinter::parenthesize(const std::string& name, 
                                      const std::vector<std::reference_wrapper<const Expr>>& exprs) {
-    std::string bulider = "(" + name;
+    std::string builder = "(" + name;
     for(const Expr& expr: exprs) {
-        bulider += " ";
-        bulider += print(expr);
+        builder += " ";
+        builder += print(expr);
     }
-    bulider += ")";
-    return bulider;
+    builder += ")";
+    return builder;
 }

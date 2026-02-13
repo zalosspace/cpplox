@@ -25,14 +25,14 @@ public:
 
     // Visitor Function 
     struct Visitor {
-        virtual Value visitExpressionStmt(const Expression& stmt) = 0;
-        virtual Value visitPrintStmt(const Print& stmt) = 0;
-        virtual Value visitVarStmt(const Var& stmt) = 0;
-        virtual Value visitBlockStmt(const Block& stmt) = 0;
-        virtual Value visitIfStmt(const If& stmt) = 0;
-        virtual Value visitWhileStmt(const While& stmt) = 0;
-        virtual Value visitFunctionStmt(const Function& stmt) = 0;
-        virtual Value visitReturnStmt(const Return& stmt) = 0;
+        virtual Value visitExpressionStmt(const Expression& stmt) { return {}; };
+        virtual Value visitPrintStmt(const Print& stmt) { return {}; };
+        virtual Value visitVarStmt(const Var& stmt) { return {}; };
+        virtual Value visitBlockStmt(const Block& stmt) { return {}; };
+        virtual Value visitIfStmt(const If& stmt) { return {}; };
+        virtual Value visitWhileStmt(const While& stmt) { return {}; };
+        virtual Value visitFunctionStmt(const Function& stmt) { return {}; };
+        virtual Value visitReturnStmt(const Return& stmt) { return {}; };
 
         virtual ~Visitor() = default;
     };
