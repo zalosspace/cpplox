@@ -53,6 +53,17 @@ Value AstPrinter::visitExpressionStmt(const Stmt::Expression& stmt) {
     return print(*stmt.expression);
 }
 
+Value AstPrinter::visitClassStmt(const Stmt::Class& stmt) {
+    std::string builder = "(class " + stmt.name.lexeme;
+
+    for (const auto& method : stmt.methods) {
+        builder += " " + print(*method);
+    }
+
+    builder += ")";
+    return builder;
+}
+
 Value AstPrinter::visitPrintStmt(const Stmt::Print& stmt) {
     return parenthesize("print", {*stmt.expression});
 }

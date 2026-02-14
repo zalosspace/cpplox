@@ -69,5 +69,6 @@ private:
     Value visitPrintStmt(const Stmt::Print& stmt) override;
     Value visitReturnStmt(const Stmt::Return& stmt) override;
     Value visitBlockStmt(const Stmt::Block& stmt) override;
+    Value visitClassStmt(const Stmt::Class& stmt) override;
     Value visitIfStmt(const Stmt::If& stmt) override;
 };

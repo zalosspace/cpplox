@@ -19,7 +19,9 @@ public:
 
     std::vector<std::unique_ptr<Stmt>> parse();
     std::unique_ptr<Stmt> statement();
+    Value visitClassStmt(const Stmt::Class& stmt);
     std::unique_ptr<Stmt> declaration();
+    std::unique_ptr<Stmt> classDeclaration();
     std::unique_ptr<Stmt> ifStatement();
     std::unique_ptr<Stmt> printStatement();
     std::unique_ptr<Stmt> returnStatement();

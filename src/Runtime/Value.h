@@ -5,11 +5,13 @@
 #include <string>
 
 class LoxCallable;
+class LoxInstance;
 
 using Value = std::variant<
+std::shared_ptr<LoxCallable>,
+std::shared_ptr<LoxInstance>,
 std::monostate,
 std::string,
-std::shared_ptr<LoxCallable>,
 double, 
 bool
 >;

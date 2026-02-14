@@ -1,13 +1,14 @@
 #pragma once
 
 #include "../Runtime/Value.h"
+#include "../Include/LoxObject.h"
 
 #include <vector>
 #include <string>
 
 class Interpreter;
 
-class LoxCallable {
+class LoxCallable : public LoxObject {
 public:
     virtual Value call(Interpreter* interpreter,
                        const std::vector<Value>& arguments) = 0;

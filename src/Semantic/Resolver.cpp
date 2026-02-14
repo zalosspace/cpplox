@@ -11,6 +11,14 @@ Value Resolver::visitBlockStmt(const Stmt::Block& stmt) {
 
     return std::monostate{};
 }
+
+Value Resolver::visitClassStmt(const Stmt::Class& stmt) {
+    declare(stmt.name);
+    define(stmt.name);
+
+    return std::monostate{};
+}
+
 Value Resolver::visitExpressionStmt(const Stmt::Expression& stmt) {
     resolve(*stmt.expression);
 

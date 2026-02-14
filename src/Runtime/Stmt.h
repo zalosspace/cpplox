@@ -22,6 +22,7 @@ public:
     class While;
     class Function;
     class Return;
+    class Class;
 
     // Visitor Function 
     struct Visitor {
@@ -33,6 +34,7 @@ public:
         virtual Value visitWhileStmt(const While& stmt) { return {}; };
         virtual Value visitFunctionStmt(const Function& stmt) { return {}; };
         virtual Value visitReturnStmt(const Return& stmt) { return {}; };
+        virtual Value visitClassStmt(const Class& stmt) { return {}; };
 
         virtual ~Visitor() = default;
     };
@@ -150,5 +152,24 @@ public:
 
     Value accept(Visitor& visitor) const override {
         return visitor.visitReturnStmt(*this);
+    }
+};
+
+class Stmt::Class : public Stmt {
+public:
+    Token name;
+    std::unique_ptr<Expr> superclass;
+    std::vector<std::unique_ptr<Stmt::Function>> methods;
+
+    Class(
+        Token name, 
+        std::unique_ptr<Expr::Variable> superclass,
+        std::vector<std::unique_ptr<Stmt::Function>> methods)
+        : name(std::move(name)),
+        superclass(std::move(superclass)),
+        methods(std::move(methods)) {}
+
+    Value accept(Visitor& visitor) const override {
+        return visitor.visitClassStmt(*this);
     }
 };

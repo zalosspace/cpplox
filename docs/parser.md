@@ -60,9 +60,12 @@ In Lox false & nil are *flasey* and everything else is *truthy*.
 ## Statement and State
 ```
 program        → declaration* EOF ;
-declaration    → funDecl
+declaration    → classDecl 
+               | funDecl
                | varDecl
                | statement ;
+
+classDecl      → "class" IDENTIFIER "{" function* "}" ;
 
 funDecl        → "fun" function ;
 function       → IDENTIFIER "(" parameters? ")" block ;

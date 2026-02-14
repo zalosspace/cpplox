@@ -1,10 +1,8 @@
-var a = "global";
-{
-  fun showA() {
-    print a;
-  }
+// Declare Class
+class IronMan {}
 
-  showA();
-  var a = "block";
-  showA();
-}
+// Instantiate
+var IronMan_MK_1 = IronMan();
+
+// Call 
+print IronMan_MK_1;

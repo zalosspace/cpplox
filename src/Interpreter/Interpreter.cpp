@@ -1,8 +1,10 @@
 #include "Interpreter.h"
 
 #include "../Runtime/Runtime.h"
+#include "../Include/LoxClass.h"
 #include "../Include/LoxCallable.h"
 #include "../Include/LoxFunction.h"
+#include "../Include/LoxInstance.h"
 
 #include <memory>
 #include <string>
@@ -235,6 +237,14 @@ std::string Interpreter::stringify(const Value &value) {
     return *b;
   }
 
+    if (auto callable = std::get_if<std::shared_ptr<LoxCallable>>(&value)) {
+        return (*callable)->toString();
+    }
+
+    if (auto instance = std::get_if<std::shared_ptr<LoxInstance>>(&value)) {
+        return (*instance)->toString();
+    }
+
   return "nil";
 }
 
@@ -343,5 +353,15 @@ Value Interpreter::visitCallExpr(const Expr::Call& expr) {
 Value Interpreter::visitBlockStmt(const Stmt::Block& stmt) {
     std::shared_ptr<Environment> newEnv = std::make_shared<Environment>(environment);
     executeBlock(stmt.statements, newEnv);
+    return std::monostate{};
+}
+
+Value Interpreter::visitClassStmt(const Stmt::Class& stmt) {
+    environment->define(stmt.name.lexeme, std::monostate{});
+
+    auto klass = std::make_shared<LoxClass>(stmt.name.lexeme);
+
+    environment->assign(stmt.name, klass);
+
     return std::monostate{};
 }

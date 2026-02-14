@@ -61,6 +61,9 @@ std::unique_ptr<Expr> Parser::logicAnd() {
 
 std::unique_ptr<Stmt> Parser::declaration() {
     try {
+        if (match({CLASS}))
+            return classDeclaration();
+
         if (match({FUN}))
             return function("function");
 
@@ -73,6 +76,31 @@ std::unique_ptr<Stmt> Parser::declaration() {
         synchronize();
         return nullptr;
     }
+}
+
+std::unique_ptr<Stmt> Parser::classDeclaration() {
+    Token name = consume(IDENTIFIER, "Expect class name.");
+
+    std::unique_ptr<Expr::Variable> superclass = nullptr;
+    if (match({LESS})) {
+        Token superName = consume(IDENTIFIER, "Expect superclass name.");
+        superclass = std::make_unique<Expr::Variable>(superName);
+    }
+
+    consume(LEFT_BRACE, "Expect '{' before class body.");
+
+    std::vector<std::unique_ptr<Stmt::Function>> methods;
+    while (!check(RIGHT_BRACE) && !isAtEnd()) {
+        methods.push_back(function("method"));
+    }
+
+    consume(RIGHT_BRACE, "Expect '}' after class body.");
+
+    return std::make_unique<Stmt::Class>(
+        std::move(name),
+        std::move(superclass),
+        std::move(methods)
+    );
 }
 
 std::unique_ptr<Expr> Parser::equality(){

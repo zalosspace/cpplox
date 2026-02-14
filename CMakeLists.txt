@@ -12,4 +12,5 @@ add_executable(cpplox src/main.cpp
     src/Interpreter/Interpreter.cpp
     src/Semantic/Environment.cpp
     src/Semantic/Resolver.cpp
+    src/Include/LoxInstance.cpp
 )

@@ -18,6 +18,7 @@ public:
     : interpreter(interpreter) {}
 
     Value visitBlockStmt(const Stmt::Block& stmt) override;
+    Value visitClassStmt(const Stmt::Class& stmt) override;
     Value visitExpressionStmt(const Stmt::Expression& stmt) override;
     Value visitFunctionStmt(const Stmt::Function& stmt) override;
     Value visitIfStmt(const Stmt::If& stmt) override;

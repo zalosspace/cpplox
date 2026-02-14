@@ -21,6 +21,7 @@ public:
     Value visitCallExpr(const Expr::Call& expr) override;
 
     Value visitExpressionStmt(const Stmt::Expression& stmt) override;
+    Value visitClassStmt(const Stmt::Class& stmt) override;
     Value visitPrintStmt(const Stmt::Print& stmt) override;
     Value visitVarStmt(const Stmt::Var& stmt) override;
     Value visitBlockStmt(const Stmt::Block& stmt) override;
