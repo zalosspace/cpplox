@@ -22,7 +22,7 @@ We'll use the same precedence rules as C, going from lowest to highest.
 
 ```
 expression     → assignment ;
-assignment     → IDENTIFIER "=" assignment
+assignment     → ( call "." )? IDENTIFIER "=" assignment
                  | logic_or ;
 
 logic_or       → logic_and ( "or" logic_and )* ;
@@ -35,7 +35,8 @@ term           → factor ( ( "-" | "+" ) factor )* ;
 factor         → unary ( ( "/" | "*" ) unary )* ;
 
 unary          → ( "!" | "-" ) unary | call ;
-call           → primary ( "(" arguments? ")" )* ;
+
+call           → primary ( "(" arguments? ")" | "." IDENTIFIER )* ;
 arguments      → expression ( "," expression )* ;
 
 primary        → "true" | "false" | "nil"

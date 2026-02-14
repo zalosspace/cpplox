@@ -11,6 +11,19 @@ Value LoxClass::call(
     return instance;
 }
 
+Value LoxInstance::get(const Token& name) {
+    if (fields.count(name.lexeme)) {
+        return fields[name.lexeme];
+    }
+
+    throw RuntimeError(name, 
+                       "Undefined property '" + name.lexeme + "'.");
+}
+
+void LoxInstance::set(const Token& name, const Value& value) {
+    fields[name.lexeme] = value;
+}
+
 std::string LoxInstance::toString() const {
     return klass->name + " instance";
 }

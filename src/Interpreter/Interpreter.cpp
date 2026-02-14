@@ -44,6 +44,23 @@ Value Interpreter::visitLogicalExpr(const Expr::Logical &expr) {
     return evaluate(*expr.right);
 }
 
+Value Interpreter::visitSetExpr(const Expr::Set& expr) {
+    Value receiver = evaluate(*expr.receiver);
+
+    if (!std::holds_alternative<std::shared_ptr<LoxInstance>>(receiver)) {
+        throw RuntimeError(expr.name,
+                           "Only instances have fields.");
+    }
+
+    auto instance = std::get<std::shared_ptr<LoxInstance>>(receiver);
+
+    Value value = evaluate(*expr.value);
+
+    instance->set(expr.name, value);
+
+    return value;
+}
+
 Value Interpreter::visitUnaryExpr(const Expr::Unary &expr) {
   Value right = evaluate(*expr.right);
 
@@ -348,6 +365,19 @@ Value Interpreter::visitCallExpr(const Expr::Call& expr) {
     }
 
     return function->call(this, arguments);
+}
+
+Value Interpreter::visitGetExpr(const Expr::Get& expr) {
+    Value receiver = evaluate(*expr.receiver);
+
+    if (auto instance = 
+        std::get_if<std::shared_ptr<LoxInstance>>(&receiver)) {
+
+        return (*instance)->get(expr.name);
+    }
+
+    throw RuntimeError(expr.name,
+                       "Only instances have properties.");
 }
 
 Value Interpreter::visitBlockStmt(const Stmt::Block& stmt) {

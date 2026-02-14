@@ -1,6 +1,7 @@
 #include "Resolver.h"
 
 #include <unordered_map>
+#include <variant>
 #include <vector>
 
 // ----------- Visitor -----------
@@ -106,6 +107,12 @@ Value Resolver::visitCallExpr(const Expr::Call& expr) {
     return std::monostate{};
 }
 
+Value Resolver::visitGetExpr(const Expr::Get& expr) {
+    resolve(*expr.receiver);
+
+    return std::monostate{};
+}
+
 Value Resolver::visitGroupingExpr(const Expr::Grouping& expr) {
     resolve(*expr.expression);
 
@@ -119,6 +126,13 @@ Value Resolver::visitLiteralExpr(const Expr::Literal& expr) {
 Value Resolver::visitLogicalExpr(const Expr::Logical& expr) {
     resolve(*expr.left);
     resolve(*expr.right);
+
+    return std::monostate{};
+}
+
+Value Resolver::visitSetExpr(const Expr::Set& expr) {
+    resolve(*expr.value);
+    resolve(*expr.receiver);
 
     return std::monostate{};
 }

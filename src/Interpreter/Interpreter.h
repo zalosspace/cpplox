@@ -36,6 +36,7 @@ public:
     Value visitGroupingExpr(const Expr::Grouping& expr) override;
     Value visitLiteralExpr(const Expr::Literal& expr) override;
     Value visitLogicalExpr(const Expr::Logical &expr) override;
+    Value visitSetExpr(const Expr::Set& expr) override;
     Value visitUnaryExpr(const Expr::Unary& expr) override;
 
     // Public API
@@ -61,6 +62,7 @@ private:
     Value visitVarExpr(const Expr::Variable& expr) override;
     Value visitAssignExpr(const Expr::Assign& expr) override;
     Value visitCallExpr(const Expr::Call& expr) override;
+    Value visitGetExpr(const Expr::Get& expr) override;
 
     Value visitExpressionStmt(const Stmt::Expression& stmt) override;
     Value visitFunctionStmt(const Stmt::Function& stmt) override;

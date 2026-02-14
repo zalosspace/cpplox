@@ -20,6 +20,8 @@ public:
     class Assign;
     class Logical;
     class Call;
+    class Get;
+    class Set;
 
     // Visitor Function 
     struct Visitor {
@@ -31,6 +33,8 @@ public:
         virtual Value visitAssignExpr(const Assign& expr) { return {}; };
         virtual Value visitLogicalExpr(const Logical& expr) { return {}; };
         virtual Value visitCallExpr(const Call& expr) { return {}; };
+        virtual Value visitGetExpr(const Get& expr) { return {}; };
+        virtual Value visitSetExpr(const Set& expr) { return {}; };
 
         virtual ~Visitor() = default;
     };
@@ -177,5 +181,40 @@ public:
     // Override
     Value accept(Visitor& visitor) const override {
         return visitor.visitCallExpr(*this);
+    }
+};
+
+class Expr::Get: public Expr {
+public:
+    std::unique_ptr<Expr> receiver;
+    Token name;
+
+    Get(std::unique_ptr<Expr> receiver, 
+        Token name)
+        :receiver(std::move(receiver)),
+        name(std::move(name)) {}
+
+    // Override
+    Value accept(Visitor& visitor) const override {
+        return visitor.visitGetExpr(*this);
+    }
+};
+
+class Expr::Set: public Expr {
+public:
+    std::unique_ptr<Expr> receiver;
+    Token name;
+    std::unique_ptr<Expr> value;
+
+    Set(std::unique_ptr<Expr> receiver, 
+        Token name,
+        std::unique_ptr<Expr> value)
+        :receiver(std::move(receiver)),
+        name(std::move(name)),
+        value(std::move(value)) {}
+
+    // Override
+    Value accept(Visitor& visitor) const override {
+        return visitor.visitSetExpr(*this);
     }
 };
