@@ -17,6 +17,11 @@ Value Resolver::visitClassStmt(const Stmt::Class& stmt) {
     declare(stmt.name);
     define(stmt.name);
 
+    for (auto& method: stmt.methods) {
+        FunctionType declaration = FunctionType::METHOD;
+        resolveFunction(*method, declaration);
+    }
+
     return std::monostate{};
 }
 

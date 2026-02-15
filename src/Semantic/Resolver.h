@@ -9,7 +9,8 @@
 
 enum FunctionType {
     NONE,
-    FUNCTION
+    FUNCTION,
+    METHOD
 };
 
 class Resolver : public Expr::Visitor, public Stmt::Visitor {

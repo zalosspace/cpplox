@@ -1,13 +1,14 @@
 #include "Interpreter.h"
 
-#include "../Runtime/Runtime.h"
-#include "../Include/LoxClass.h"
 #include "../Include/LoxCallable.h"
+#include "../Include/LoxClass.h"
 #include "../Include/LoxFunction.h"
 #include "../Include/LoxInstance.h"
+#include "../Runtime/Runtime.h"
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <variant>
 
 // ---------- Public API ----------
@@ -23,42 +24,41 @@ void Interpreter::interpret(
 }
 
 // ---------- Override Visitor Function ----------
-Value Interpreter::visitLiteralExpr(const Expr::Literal &expr) { 
-    return expr.value;
+Value Interpreter::visitLiteralExpr(const Expr::Literal &expr) {
+  return expr.value;
 }
 
-Value Interpreter::visitLogicalExpr(const Expr::Logical &expr) { 
-    Value left = evaluate(*expr.left);
+Value Interpreter::visitLogicalExpr(const Expr::Logical &expr) {
+  Value left = evaluate(*expr.left);
 
-    // Or
-    if (expr.operator_.type == TokenType::OR){
-        if (isTruthy(left)) 
-            return left;
-    }
-    // And
-    else { 
-        if (!isTruthy(left)) 
-            return left;
-    }
+  // Or
+  if (expr.operator_.type == TokenType::OR) {
+    if (isTruthy(left))
+      return left;
+  }
+  // And
+  else {
+    if (!isTruthy(left))
+      return left;
+  }
 
-    return evaluate(*expr.right);
+  return evaluate(*expr.right);
 }
 
-Value Interpreter::visitSetExpr(const Expr::Set& expr) {
-    Value receiver = evaluate(*expr.receiver);
+Value Interpreter::visitSetExpr(const Expr::Set &expr) {
+  Value receiver = evaluate(*expr.receiver);
 
-    if (!std::holds_alternative<std::shared_ptr<LoxInstance>>(receiver)) {
-        throw RuntimeError(expr.name,
-                           "Only instances have fields.");
-    }
+  if (!std::holds_alternative<std::shared_ptr<LoxInstance>>(receiver)) {
+    throw RuntimeError(expr.name, "Only instances have fields.");
+  }
 
-    auto instance = std::get<std::shared_ptr<LoxInstance>>(receiver);
+  auto instance = std::get<std::shared_ptr<LoxInstance>>(receiver);
 
-    Value value = evaluate(*expr.value);
+  Value value = evaluate(*expr.value);
 
-    instance->set(expr.name, value);
+  instance->set(expr.name, value);
 
-    return value;
+  return value;
 }
 
 Value Interpreter::visitUnaryExpr(const Expr::Unary &expr) {
@@ -144,77 +144,68 @@ Value Interpreter::visitBinaryExpr(const Expr::Binary &expr) {
   return std::monostate{};
 }
 
-Value Interpreter::visitVarExpr(const Expr::Variable& expr) {
-    return lookUpVariable(expr.name, expr);
+Value Interpreter::visitVarExpr(const Expr::Variable &expr) {
+  return lookUpVariable(expr.name, expr);
 }
 
-Value Interpreter::lookUpVariable(
-    const Token& name, 
-    const Expr::Variable& expr)
-{
-    auto it = locals.find(&expr);
-    
-    if (it != locals.end()) {
-        int distance = it->second;
-        return environment->getAt(distance, name.lexeme);
-    }
-    else {
-        return globals->get(name);
-    }
+Value Interpreter::lookUpVariable(const Token &name,
+                                  const Expr::Variable &expr) {
+  auto it = locals.find(&expr);
+
+  if (it != locals.end()) {
+    int distance = it->second;
+    return environment->getAt(distance, name.lexeme);
+  } else {
+    return globals->get(name);
+  }
 }
 
-Value Interpreter::visitVarStmt(const Stmt::Var& stmt) {
-    Value value = std::monostate{};
+Value Interpreter::visitVarStmt(const Stmt::Var &stmt) {
+  Value value = std::monostate{};
 
-    if (stmt.initializer) {
-        value = evaluate(*stmt.initializer.get());
-    }
+  if (stmt.initializer) {
+    value = evaluate(*stmt.initializer.get());
+  }
 
-    environment->define(stmt.name.lexeme, value);
-    return std::monostate{};
+  environment->define(stmt.name.lexeme, value);
+  return std::monostate{};
 }
 
-Value Interpreter::visitWhileStmt(const Stmt::While& stmt) {
-    while (isTruthy(evaluate(*stmt.condition))) {
-        execute(*stmt.body);
-    }
+Value Interpreter::visitWhileStmt(const Stmt::While &stmt) {
+  while (isTruthy(evaluate(*stmt.condition))) {
+    execute(*stmt.body);
+  }
 
-    return std::monostate{};
+  return std::monostate{};
 }
 
 // ---------- Private Function ----------
 // ---------- Helper Function ----------
-Value Interpreter::evaluate(const Expr& expr) { 
-    return expr.accept(*this);
-}
+Value Interpreter::evaluate(const Expr &expr) { return expr.accept(*this); }
 
-void Interpreter::execute(const Stmt& stmt) { 
-    stmt.accept(*this); 
-}
+void Interpreter::execute(const Stmt &stmt) { stmt.accept(*this); }
 
-void Interpreter::resolve(const Expr& expr, int depth) {
-    locals[&expr] = depth;
+void Interpreter::resolve(const Expr &expr, int depth) {
+  locals[&expr] = depth;
 }
 
 void Interpreter::executeBlock(
-    const std::vector<std::unique_ptr<Stmt>>& statements,
-    std::shared_ptr<Environment> newEnv)
-{
-    auto previous = environment;
+    const std::vector<std::unique_ptr<Stmt>> &statements,
+    std::shared_ptr<Environment> newEnv) {
+  auto previous = environment;
 
-    try {
-        environment = newEnv;
+  try {
+    environment = newEnv;
 
-        for (const auto& stmt : statements) {
-            execute(*stmt);
-        }
+    for (const auto &stmt : statements) {
+      execute(*stmt);
     }
-    catch (...) {
-        environment = previous;
-        throw;
-    }
-
+  } catch (...) {
     environment = previous;
+    throw;
+  }
+
+  environment = previous;
 }
 
 bool Interpreter::isTruthy(const Value &value) {
@@ -254,13 +245,13 @@ std::string Interpreter::stringify(const Value &value) {
     return *b;
   }
 
-    if (auto callable = std::get_if<std::shared_ptr<LoxCallable>>(&value)) {
-        return (*callable)->toString();
-    }
+  if (auto callable = std::get_if<std::shared_ptr<LoxCallable>>(&value)) {
+    return (*callable)->toString();
+  }
 
-    if (auto instance = std::get_if<std::shared_ptr<LoxInstance>>(&value)) {
-        return (*instance)->toString();
-    }
+  if (auto instance = std::get_if<std::shared_ptr<LoxInstance>>(&value)) {
+    return (*instance)->toString();
+  }
 
   return "nil";
 }
@@ -288,110 +279,123 @@ Value Interpreter::visitExpressionStmt(const Stmt::Expression &stmt) {
   return std::monostate{};
 }
 
-Value Interpreter::visitFunctionStmt(const Stmt::Function& stmt) {
-    // Wrap the function declaration in a LoxFunction
-    std::shared_ptr<LoxCallable> function =
-        std::make_shared<LoxFunction>(&stmt, environment);
+Value Interpreter::visitFunctionStmt(const Stmt::Function &stmt) {
+  // Wrap the function declaration in a LoxFunction
+  std::shared_ptr<LoxCallable> function =
+      std::make_shared<LoxFunction>(&stmt, environment);
 
-    // Store it in the environment as a Value
-    environment->define(stmt.name.lexeme, Value(function));
+  // Store it in the environment as a Value
+  environment->define(stmt.name.lexeme, Value(function));
 
-    return std::monostate{}; // functions don't return a value
+  return std::monostate{}; // functions don't return a value
 }
 
-Value Interpreter::visitIfStmt(const Stmt::If& stmt) {
-    if (isTruthy(evaluate(*stmt.condition))){
-        execute(*stmt.thenBranch);
-    }
-    else if (stmt.elseBranch != nullptr){
-        execute(*stmt.elseBranch);
-    }
+Value Interpreter::visitIfStmt(const Stmt::If &stmt) {
+  if (isTruthy(evaluate(*stmt.condition))) {
+    execute(*stmt.thenBranch);
+  } else if (stmt.elseBranch != nullptr) {
+    execute(*stmt.elseBranch);
+  }
 
-    return std::monostate{};
+  return std::monostate{};
 }
 
-Value Interpreter::visitPrintStmt(const Stmt::Print& stmt) {
+Value Interpreter::visitPrintStmt(const Stmt::Print &stmt) {
   Value value = evaluate(*stmt.expression);
   std::cout << stringify(value) << '\n';
 
   return std::monostate{};
 }
 
-Value Interpreter::visitReturnStmt(const Stmt::Return& stmt) {
-    Value value = std::monostate{};
+Value Interpreter::visitReturnStmt(const Stmt::Return &stmt) {
+  Value value = std::monostate{};
 
-    if (stmt.value != nullptr)
-        value = evaluate(*stmt.value);
+  if (stmt.value != nullptr)
+    value = evaluate(*stmt.value);
 
-    // Returns value to the caller
-    throw Return(value);
+  // Returns value to the caller
+  throw Return(value);
 }
 
-Value Interpreter::visitAssignExpr(const Expr::Assign& expr) {
-    Value value = evaluate(*expr.value);
+Value Interpreter::visitAssignExpr(const Expr::Assign &expr) {
+  Value value = evaluate(*expr.value);
 
-    auto it = locals.find(&expr);
+  auto it = locals.find(&expr);
 
-    if (it != locals.end()) {
-        int distance = it->second;
-        environment->assignAt(distance, expr.name, value);
-    } else {
-        globals->assign(expr.name, value);
-    }
+  if (it != locals.end()) {
+    int distance = it->second;
+    environment->assignAt(distance, expr.name, value);
+  } else {
+    globals->assign(expr.name, value);
+  }
 
-    return value;
+  return value;
 }
 
-Value Interpreter::visitCallExpr(const Expr::Call& expr) {
-    Value callee = evaluate(*expr.callee);
+Value Interpreter::visitCallExpr(const Expr::Call &expr) {
+  Value callee = evaluate(*expr.callee);
 
-    std::vector<Value> arguments;
-    for (const auto& argument: expr.arguments){
-        arguments.push_back(evaluate(*argument));
-    }
+  std::vector<Value> arguments;
+  for (const auto &argument : expr.arguments) {
+    arguments.push_back(evaluate(*argument));
+  }
 
-    if (!(std::holds_alternative<std::shared_ptr<LoxCallable>>(callee))) {
-        throw RuntimeError(expr.paren,
-                           "Can only call function and classes.");
-    }
+  if (!(std::holds_alternative<std::shared_ptr<LoxCallable>>(callee))) {
+    throw RuntimeError(expr.paren, "Can only call function and classes.");
+  }
 
-    std::shared_ptr<LoxCallable> function = std::get<std::shared_ptr<LoxCallable>>(callee);
+  std::shared_ptr<LoxCallable> function =
+      std::get<std::shared_ptr<LoxCallable>>(callee);
 
-    if (arguments.size() != function->arity()) {
-        throw RuntimeError(expr.paren,
-                           "Expected " + std::to_string(function->arity()) +
-                           " arguments but got " + 
-                           std::to_string(arguments.size()) + ".");
-    }
+  if (arguments.size() != function->arity()) {
+    throw RuntimeError(expr.paren, "Expected " +
+                                       std::to_string(function->arity()) +
+                                       " arguments but got " +
+                                       std::to_string(arguments.size()) + ".");
+  }
 
-    return function->call(this, arguments);
+  return function->call(this, arguments);
 }
 
-Value Interpreter::visitGetExpr(const Expr::Get& expr) {
-    Value receiver = evaluate(*expr.receiver);
+Value Interpreter::visitGetExpr(const Expr::Get &expr) {
+  Value receiver = evaluate(*expr.receiver);
 
-    if (auto instance = 
-        std::get_if<std::shared_ptr<LoxInstance>>(&receiver)) {
+  if (auto instance = std::get_if<std::shared_ptr<LoxInstance>>(&receiver)) {
 
-        return (*instance)->get(expr.name);
-    }
+    return (*instance)->get(expr.name);
+  }
 
-    throw RuntimeError(expr.name,
-                       "Only instances have properties.");
+  throw RuntimeError(expr.name, "Only instances have properties.");
 }
 
-Value Interpreter::visitBlockStmt(const Stmt::Block& stmt) {
-    std::shared_ptr<Environment> newEnv = std::make_shared<Environment>(environment);
-    executeBlock(stmt.statements, newEnv);
-    return std::monostate{};
+Value Interpreter::visitBlockStmt(const Stmt::Block &stmt) {
+  std::shared_ptr<Environment> newEnv =
+      std::make_shared<Environment>(environment);
+  executeBlock(stmt.statements, newEnv);
+  return std::monostate{};
 }
 
 Value Interpreter::visitClassStmt(const Stmt::Class& stmt) {
     environment->define(stmt.name.lexeme, std::monostate{});
 
-    auto klass = std::make_shared<LoxClass>(stmt.name.lexeme);
+    std::unordered_map<std::string, std::shared_ptr<LoxFunction>> methods;
+
+    for (auto& method : stmt.methods) {
+        auto function = std::make_shared<LoxFunction>(
+            method.get(),  
+            environment     
+        );
+
+        methods[method->name.lexeme] = function;
+    }
+
+    auto klass = std::make_shared<LoxClass>(
+        stmt.name.lexeme,
+        std::move(methods)   
+    );
 
     environment->assign(stmt.name, klass);
 
     return std::monostate{};
 }
+

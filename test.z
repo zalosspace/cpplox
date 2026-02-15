@@ -1,8 +1,7 @@
-// Declare Class
-class IronMan {}
+class Bacon {
+  eat() {
+    print "Crunch crunch crunch!";
+  }
+}
 
-// Instantiate
-var IronMan_MK_1 = IronMan();
-
-// Call 
-print IronMan_MK_1;
+Bacon().eat(); // Prints "Crunch crunch crunch!".

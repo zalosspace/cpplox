@@ -12,12 +12,19 @@ Value LoxClass::call(
 }
 
 Value LoxInstance::get(const Token& name) {
-    if (fields.count(name.lexeme)) {
-        return fields[name.lexeme];
+    auto field = fields.find(name.lexeme);
+    if (field != fields.end()) {
+        return field->second;
     }
 
-    throw RuntimeError(name, 
-                       "Undefined property '" + name.lexeme + "'.");
+    std::shared_ptr<LoxFunction> method =
+        klass->findMethod(name.lexeme);
+
+    if (method != nullptr) {
+        return std::static_pointer_cast<LoxCallable>(method);
+    }
+
+    throw RuntimeError(name, "Undefined property '" + name.lexeme + "'.");
 }
 
 void LoxInstance::set(const Token& name, const Value& value) {
